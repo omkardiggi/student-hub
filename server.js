@@ -300,6 +300,7 @@ app.post('/api/tts', async (req, res) => {
     if (!text || !text.trim()) return res.status(400).json({ error: 'No text provided.' });
     const buffer = await synthesize({ text, language, lessonTitle });
     res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.send(buffer);
   } catch (e) {
