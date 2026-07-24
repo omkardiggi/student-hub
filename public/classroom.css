@@ -1,0 +1,361 @@
+/* classroom.css — Omkar Hub · AI Teacher fullscreen classroom overlay.
+   Reuses the site's theme tokens (--indigo, --amber, --paper, --radius, fonts).
+   Everything is scoped under .cls so it never leaks into the dashboard. */
+
+.cls {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1200px 700px at 78% -8%, rgba(91,79,240,0.18), transparent 60%),
+    radial-gradient(900px 600px at 8% 108%, rgba(245,147,59,0.12), transparent 60%),
+    #0b0b12;
+  color: var(--t-on-dark);
+  opacity: 0;
+  transform: scale(1.01);
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.cls.is-open { opacity: 1; transform: none; }
+.cls[hidden] { display: none; }
+
+/* soft moving light to feel alive */
+.cls::before {
+  content: "";
+  position: absolute; inset: -20%;
+  background: radial-gradient(500px 320px at 50% 20%, rgba(255,255,255,0.05), transparent 70%);
+  pointer-events: none;
+  animation: cls-drift 14s var(--ease) infinite alternate;
+}
+@keyframes cls-drift { to { transform: translate(4%, 3%); } }
+
+/* ───────── Top bar ───────── */
+.cls__top {
+  position: relative; z-index: 6;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 22px;
+  background: linear-gradient(180deg, rgba(9,9,15,0.7), transparent);
+}
+.cls__brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.01em; }
+.cls__brand .brand__mark {
+  width: 30px; height: 30px; border-radius: 9px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+  box-shadow: 0 6px 18px rgba(91,79,240,0.5);
+}
+.cls__brand .brand__mark svg { width: 17px; height: 17px; }
+.cls__ttl { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.cls__ttl b { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cls__ttl span { font-size: 12px; color: var(--t-on-dark-soft); }
+.cls__top-sp { flex: 1; }
+.cls__chip {
+  font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.cls__chip i { width: 7px; height: 7px; border-radius: 50%; background: #37d67a; box-shadow: 0 0 0 0 rgba(55,214,122,.6); animation: cls-live 1.8s infinite; }
+@keyframes cls-live { 0%{box-shadow:0 0 0 0 rgba(55,214,122,.5)} 100%{box-shadow:0 0 0 8px rgba(55,214,122,0)} }
+.cls__x {
+  width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06); color: #fff; cursor: pointer; display: grid; place-items: center;
+  transition: background .2s, transform .2s;
+}
+.cls__x:hover { background: rgba(255,255,255,0.14); transform: rotate(90deg); }
+.cls__x svg { width: 20px; height: 20px; }
+
+/* ───────── Stage (the room) ───────── */
+.cls__stage {
+  position: relative; z-index: 4;
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 26px;
+  padding: 8px 30px 4px;
+  align-items: stretch;
+}
+
+/* Green board with slides */
+.cls__boardwrap { position: relative; display: flex; flex-direction: column; min-height: 0; }
+.cls__board {
+  position: relative;
+  flex: 1; min-height: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 130% at 30% 10%, #2f5b46 0%, #22503b 42%, #163a2a 100%);
+  border: 12px solid #6b4a2f;
+  border-image: linear-gradient(160deg, #8a6440, #5a3d26) 1;
+  box-shadow:
+    inset 0 0 90px rgba(0,0,0,0.45),
+    inset 0 2px 0 rgba(255,255,255,0.05),
+    0 40px 90px rgba(0,0,0,0.5);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.cls__board::after {  /* chalk dust sheen */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(700px 300px at 70% 0%, rgba(255,255,255,0.06), transparent 60%);
+}
+.cls__slidearea { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.cls__slide {
+  position: absolute; inset: 0;
+  padding: 26px 30px;
+  overflow: auto;
+  opacity: 0; transform: translateY(14px) scale(.99);
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+}
+.cls__slide.in { opacity: 1; transform: none; }
+.cls__slide.out { opacity: 0; transform: translateY(-12px) scale(.99); }
+
+/* Recolour the reused .slide-canvas markup to read as green-board chalk */
+.cls__board .slide-canvas { background: transparent; box-shadow: none; padding: 0; color: #eafff2; }
+.cls__board .slide-canvas h2,
+.cls__board .slide-canvas h3 { color: #ffffff; }
+.cls__board .slide-title { color: #fff; }
+.cls__board .kicker { color: #ffe6b8; background: rgba(255,230,184,0.12); border-color: rgba(255,230,184,0.3); }
+.cls__board .slide-sub,
+.cls__board .expx__pt p,
+.cls__board .diax-cycle__text span,
+.cls__board .diax-compare__body p { color: rgba(234,255,242,0.82); }
+.cls__board .expx__pt b,
+.cls__board .diax-cycle__text b,
+.cls__board .diax-compare__head b,
+.cls__board .flowx__node { color: #fff; }
+.cls__board .flowx__node { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.18); }
+.cls__board .flowx__arr { color: #ffe6b8; }
+.cls__board .expx__pt .n,
+.cls__board .diax-cycle__badge { background: var(--amber); color: #241300; }
+.cls__board .slide-canvas__img { border-radius: 12px; filter: saturate(1.05) contrast(1.02); }
+.cls__board .slide-canvas__imgwrap { box-shadow: 0 12px 34px rgba(0,0,0,.4); border-radius: 12px; }
+
+/* pointer beam the teacher casts on the board when pointing */
+.cls__pointer {
+  position: absolute; z-index: 5; top: 40%; left: -8%;
+  width: 0; height: 0; opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+}
+.cls__pointer.on { opacity: 1; }
+.cls__pointer b {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  background: radial-gradient(circle, #ffd27a, #ff9d3c);
+  box-shadow: 0 0 18px 6px rgba(255,157,60,.6);
+  transform: translate(-50%,-50%);
+  animation: cls-point 2.2s ease-in-out infinite;
+}
+@keyframes cls-point { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.35)} }
+
+.cls__boardfoot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 14px; background: rgba(0,0,0,0.28);
+  font-size: 12.5px; color: rgba(234,255,242,0.8);
+}
+.cls__rail { display: flex; gap: 6px; }
+.cls__pip { width: 22px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.22); cursor: pointer; transition: background .25s, width .25s; border: 0; padding: 0; }
+.cls__pip.active { background: var(--amber); width: 30px; }
+
+/* ───────── Teacher column ───────── */
+.cls__teachwrap { position: relative; display: flex; flex-direction: column; min-height: 0; }
+.cls__teacher {
+  position: relative; flex: 1; min-height: 0;
+  border-radius: 18px; overflow: hidden;
+  background:
+    linear-gradient(180deg, #1a1a24 0%, #14141c 60%, #0f0f16 100%);
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.4), 0 30px 70px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.cls__teacher canvas { display: block; width: 100% !important; height: 100% !important; position: relative; z-index: 2; }
+
+/* "loading the 3D teacher" badge — shown over the SVG stand-in until the avatar arrives */
+.cls__tload {
+  position: absolute; z-index: 6; left: 50%; bottom: 14px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 7px 14px; border-radius: 999px;
+  background: rgba(10,10,16,0.72); border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(8px);
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.86);
+}
+.cls__tload i {
+  width: 13px; height: 13px; border-radius: 50%; flex: none;
+  border: 2px solid rgba(255,255,255,0.25); border-top-color: var(--amber);
+  animation: cls-spin .8s linear infinite;
+}
+@keyframes cls-spin { to { transform: rotate(360deg); } }
+/* subtle classroom floor + spotlight behind the teacher */
+.cls__teacher::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(420px 300px at 50% 22%, rgba(91,79,240,0.22), transparent 62%),
+    linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.5) 100%);
+  pointer-events: none;
+}
+
+/* Captions */
+.cls__caption {
+  position: relative; z-index: 5;
+  margin-top: 12px;
+  min-height: 62px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  font-size: 15.5px; line-height: 1.55; color: #f3f3f8;
+  display: flex; align-items: center;
+}
+.cls__caption b { color: var(--amber); font-weight: 700; margin-right: 8px; white-space: nowrap; }
+.cls__caption .txt { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+
+/* ───────── Controls ───────── */
+.cls__controls {
+  position: relative; z-index: 6;
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 16px 24px 20px;
+  background: linear-gradient(0deg, rgba(9,9,15,0.75), transparent);
+}
+.cls__btn {
+  height: 46px; min-width: 46px; padding: 0 14px;
+  border-radius: 13px; border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06); color: #fff; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 13.5px; font-weight: 600; font-family: inherit;
+  transition: background .2s, transform .12s, border-color .2s;
+}
+.cls__btn:hover { background: rgba(255,255,255,0.13); }
+.cls__btn:active { transform: translateY(1px) scale(.98); }
+.cls__btn svg { width: 20px; height: 20px; }
+.cls__btn[disabled] { opacity: .4; cursor: not-allowed; }
+.cls__btn--play {
+  height: 58px; min-width: 58px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+  border: 0; box-shadow: 0 12px 30px rgba(91,79,240,0.5);
+}
+.cls__btn--play:hover { filter: brightness(1.08); background: linear-gradient(135deg, var(--indigo), var(--indigo-deep)); }
+.cls__btn--play svg { width: 26px; height: 26px; }
+.cls__btn--mic.rec { background: #e5484d; border-color: #e5484d; animation: cls-live 1.4s infinite; }
+.cls__speed { font-variant-numeric: tabular-nums; }
+.cls__sep { width: 1px; height: 30px; background: rgba(255,255,255,0.14); margin: 0 4px; }
+
+/* ───────── Side dock (post-lesson tools) ───────── */
+.cls__dock {
+  position: absolute; z-index: 7; right: 16px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cls__dock .cls__btn { width: 46px; padding: 0; }
+
+/* ───────── Panel (quiz / notes / extras) ───────── */
+.cls__panel {
+  position: absolute; z-index: 20; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 30px; background: rgba(6,6,11,0.62); backdrop-filter: blur(6px);
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.cls__panel.show { opacity: 1; pointer-events: auto; }
+.cls__sheet {
+  width: min(760px, 96vw); max-height: 88vh; overflow: auto;
+  background: var(--paper); color: var(--t-strong);
+  border-radius: var(--radius-lg); padding: 26px 28px;
+  box-shadow: var(--shadow-lift);
+}
+.cls__sheet h3 { font-family: "Playfair Display", serif; font-size: 26px; margin: 0 0 4px; }
+.cls__sheet .sub { color: var(--t-muted); font-size: 14px; margin-bottom: 18px; }
+.cls__sheet-x { float: right; border: 0; background: var(--indigo-soft); color: var(--indigo-deep); border-radius: 10px; width: 34px; height: 34px; cursor: pointer; font-size: 18px; }
+.cls__flash {
+  perspective: 1000px; height: 150px; margin-bottom: 12px; cursor: pointer;
+}
+.cls__flash-in { position: relative; width: 100%; height: 100%; transition: transform .5s var(--ease); transform-style: preserve-3d; }
+.cls__flash.flip .cls__flash-in { transform: rotateY(180deg); }
+.cls__flash-face {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: center;
+  text-align: center; box-shadow: var(--shadow-soft);
+}
+.cls__flash-front { background: #fff; border: 1px solid var(--paper-edge); font-weight: 600; }
+.cls__flash-back { background: linear-gradient(135deg, var(--indigo-soft), #fff); transform: rotateY(180deg); color: var(--indigo-deep); }
+.cls__kp { margin: 0; padding-left: 20px; }
+.cls__kp li { margin: 7px 0; line-height: 1.5; }
+.cls__q { padding: 14px 0; border-bottom: 1px solid var(--paper-edge); }
+.cls__q b { display: block; margin-bottom: 8px; }
+.cls__opt { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--paper-edge); background: #fff; cursor: pointer; font: inherit; transition: background .15s, border-color .15s; }
+.cls__opt:hover { border-color: var(--indigo); }
+.cls__opt.correct { background: #e7f7ed; border-color: #37b06a; }
+.cls__opt.wrong { background: #fdecec; border-color: #e5484d; }
+.cls__code { background: #0f1117; color: #e6e6ef; border-radius: 12px; padding: 14px 16px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; overflow-x: auto; white-space: pre; }
+
+.cls__loading { display: inline-flex; gap: 6px; align-items: center; color: var(--t-muted); }
+.cls__loading i { width: 8px; height: 8px; border-radius: 50%; background: var(--indigo); animation: cls-bounce .9s infinite; }
+.cls__loading i:nth-child(2){ animation-delay: .15s } .cls__loading i:nth-child(3){ animation-delay: .3s }
+@keyframes cls-bounce { 0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-6px);opacity:1} }
+
+/* ───────── The "Learn with AI Teacher" launch button (lives in the lesson) ───────── */
+.learnbtn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border: 0; border-radius: 14px; cursor: pointer;
+  font: 700 15px/1 "Plus Jakarta Sans", system-ui, sans-serif; color: #fff;
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+  box-shadow: 0 12px 30px rgba(91,79,240,0.4);
+  transition: transform .15s var(--ease), box-shadow .2s, filter .2s;
+}
+.learnbtn:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(91,79,240,0.5); filter: brightness(1.05); }
+.learnbtn:active { transform: translateY(0); }
+.learnbtn .emo { font-size: 18px; }
+.learnbtn .spark {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--amber);
+  box-shadow: 0 0 0 0 rgba(245,147,59,.7); animation: cls-live 1.8s infinite;
+}
+.lesson__choice { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
+.lesson__choice .hint { color: var(--t-muted); font-size: 13px; }
+
+/* ───────── Responsive ───────── */
+@media (max-width: 940px) {
+  .cls__stage { grid-template-columns: 1fr; grid-template-rows: 1.2fr .8fr; padding: 6px 16px; gap: 14px; }
+  .cls__caption { display: none; }
+  .cls__dock { position: static; transform: none; flex-direction: row; justify-content: center; margin: 6px 0; }
+  .cls__controls { gap: 8px; padding: 12px 14px 16px; }
+  .cls__btn span:not(.cls__speed) { display: none; }
+}
+@media (max-width: 620px) {
+  .cls__top { padding: 12px 14px; }
+  .cls__ttl b { max-width: 42vw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cls, .cls__slide, .cls__flash-in, .learnbtn { transition: none; }
+  .cls::before, .cls__pointer b { animation: none; }
+}
+
+/* ───────── Progressive reveal — points land in time with the teacher's voice ───────── */
+.cls__slide .cls-rv { opacity: 0; transform: translateY(12px); }
+.cls__slide .cls-rv.cls-rv-in {
+  opacity: 1; transform: none;
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+}
+
+/* ───────── Chalk handwriting — the key formula is written on the board ───────── */
+.cls__chalk {
+  position: absolute; z-index: 4; left: 26px; right: 26px; bottom: 46px;
+  height: 84px; pointer-events: none;
+}
+.cls__chalk[hidden] { display: none; }
+.cls__chalk svg { width: 100%; height: 100%; overflow: visible; }
+.cls-chalk-t {
+  font-family: "Caveat", "Patrick Hand", cursive;
+  font-size: 50px; font-weight: 700;
+  fill: none; stroke: #eafff2; stroke-width: 1.15;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1600; stroke-dashoffset: 1600;
+  filter: drop-shadow(0 0 7px rgba(234, 255, 242, .38));
+  animation: cls-write 2.6s ease forwards, cls-chalk-fill .9s ease 2.1s forwards;
+}
+@keyframes cls-write { to { stroke-dashoffset: 0; } }
+@keyframes cls-chalk-fill { to { fill: rgba(234, 255, 242, .92); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cls__slide .cls-rv { opacity: 1; transform: none; }
+  .cls-chalk-t { animation: none; stroke-dashoffset: 0; fill: rgba(234,255,242,.92); }
+}
+@media (max-width: 940px) { .cls__chalk { display: none; } }
+
+/* keep slide text clear of the chalk strip at the foot of the board */
+.cls__slidearea.has-chalk .cls__slide { padding-bottom: 116px; }

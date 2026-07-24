@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Hub — turn any doubt into a lesson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav" id="nav">
+  <a class="brand" href="#top">
+    <span class="brand__mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </span>
+    <span class="brand__word">Student Hub</span>
+  </a>
+  <div class="nav__links">
+    <a href="#how">How it works</a>
+    <a href="#studio">The deck</a>
+    <a href="#depth">Depth</a>
+    <a href="#library">Library</a>
+  </div>
+  <a href="/login.html" class="btn btn--primary">Try it free</a>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero" id="top" data-screen-label="Hero">
+  <video class="hero__video" autoplay muted loop playsinline>
+    <source src="uploads/teacher.mp4" type="video/mp4">
+  </video>
+  <div class="hero__vignette"></div>
+  <div class="hero__scrim"></div>
+  <canvas class="hero__particles" id="heroParticles"></canvas>
+  <div class="hero__grain"></div>
+
+  <div class="hero__inner">
+    <div class="hero__eyebrow eyebrow">Your AI study companion</div>
+    <h1 class="reveal in">Any doubt.<br>A whole <em>lesson.</em></h1>
+    <p class="hero__sub reveal in d1">Ask by text, photo, or voice. Student Hub builds you a guided deck — flowcharts, diagrams, and a tutor that walks you through every slide.</p>
+
+    <div class="askbar reveal in d2">
+      <div class="askbar__text">
+        <div class="askbar__typed" id="heroTyped"><span class="caret"></span></div>
+      </div>
+      <div class="askbar__modes">
+        <button class="askbar__mode" title="Type">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="askbar__mode" title="Photo">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 8a2 2 0 012-2h2l1.2-1.6A1 1 0 019 4h6a1 1 0 01.8.4L17 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12.5" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg>
+        </button>
+        <button class="askbar__mode" title="Voice">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <a class="askbar__send" href="/login.html" title="Ask">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="scroll-cue">
+    <div class="mouse"></div>
+    <span>Scroll</span>
+  </div>
+</header>
+
+<!-- ===================== HOW IT WORKS — timeline ===================== -->
+<section class="how" id="how" data-screen-label="How it works">
+  <div class="wrap">
+    <div class="how__head reveal">
+      <div class="eyebrow">How it works</div>
+      <h2 class="serif">From a photo to a lesson, in three steps.</h2>
+      <p>No setup, no studying how to ask. Show Student Hub your doubt and it does the rest.</p>
+    </div>
+
+    <div class="how__timeline" id="howTimeline">
+      <div class="how__spine"><div class="how__spine-fill" id="howFill"></div></div>
+
+      <!-- STEP 1 -->
+      <div class="how-step" id="howStep1">
+        <div class="how-step__node"><span class="num">1</span></div>
+        <div class="how-step__text">
+          <span class="kicker">Upload your doubt</span>
+          <h3 class="serif">Snap a photo. Or type it. Or say it.</h3>
+          <p>Photograph a textbook page or a problem you're stuck on, type a question, or just speak it out loud. Student Hub reads it and figures out what you actually need.</p>
+        </div>
+        <div class="how-step__mock">
+          <div class="how-mock">
+            <div class="upcard">
+              <div class="upcard__img"></div>
+              <div class="upcard__row"><span class="dotpulse"></span> <span class="upcard__tag">photosynthesis.jpg</span> · understood</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="how-step" id="howStep2">
+        <div class="how-step__node"><span class="num">2</span></div>
+        <div class="how-step__text">
+          <span class="kicker">The AI builds your deck</span>
+          <h3 class="serif">It makes its own slide deck — the easy way.</h3>
+          <p>Student Hub's AI agent breaks the topic into bite-sized slides on its own, drawing clean flowcharts and labelled diagrams so every idea is easy to follow.</p>
+        </div>
+        <div class="how-step__mock">
+          <div class="how-mock">
+            <div class="how-deck">
+              <div class="how-slide">
+                <div class="ln title"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:60%"></div>
+              </div>
+              <div class="how-slide">
+                <div class="ln title" style="width:55%"></div>
+                <div class="mini-flow"><i></i><span class="ar">›</span><i></i><span class="ar">›</span><i></i></div>
+              </div>
+              <div class="how-slide">
+                <div class="ln title" style="width:50%"></div>
+                <div class="mini-dia"><span class="cir"></span><span class="ll"><span></span><span style="width:70%"></span><span style="width:85%"></span></span></div>
+              </div>
+              <div class="how-deck__cap">Title · flowchart · diagram — generated automatically</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="how-step" id="howStep3">
+        <div class="how-step__node"><span class="num">3</span></div>
+        <div class="how-step__text">
+          <span class="kicker">A tutor explains it</span>
+          <h3 class="serif">An AI tutor walks you through it — in your language.</h3>
+          <p>Press play and the tutor explains every slide out loud, in whatever language you think in — English, Hindi, Tamil and more — diagrams and flowcharts included.</p>
+        </div>
+        <div class="how-step__mock">
+          <div class="how-mock">
+            <div class="how-lang__top">
+              <span class="how-lang__orb"></span>
+              <span class="how-lang__who"><b>Student Hub tutor</b><span>now explaining · slide 2 of 4</span></span>
+            </div>
+            <div class="how-lang__chips">
+              <span class="live">English</span>
+              <span>हिन्दी</span>
+              <span>தமிழ்</span>
+              <span>Español</span>
+              <span>العربية</span>
+              <span>中文</span>
+              <span>+ 40 more</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== INPUT MODES ===================== -->
+<section class="modes" id="modes" data-screen-label="Input modes">
+  <div class="wrap">
+    <div class="modes__head">
+      <div class="section-head reveal">
+        <div class="eyebrow">Ask however you think</div>
+        <h2 class="serif">Stuck? Just show us.</h2>
+      </div>
+      <p class="reveal d1" style="max-width:340px;font-size:16px;line-height:1.6;color:var(--t-muted);">No perfect phrasing required. Snap a textbook page, mumble a half-formed question, or type a line — Student Hub figures out what you're really asking.</p>
+    </div>
+
+    <div class="modes__grid">
+      <article class="mode-card reveal">
+        <div class="mode-card__icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Type it</h3>
+        <p>Drop in a question, a confusing sentence, or a whole paragraph you can't crack.</p>
+        <div class="mode-card__demo">
+          <div class="td-line">"why is the sky <span class="cw">blue</span> and not violet?"</div>
+        </div>
+      </article>
+
+      <article class="mode-card reveal d1">
+        <div class="mode-card__icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 8a2 2 0 012-2h2l1.2-1.6A1 1 0 019 4h6a1 1 0 01.8.4L17 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12.5" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg>
+        </div>
+        <h3>Snap it</h3>
+        <p>Photograph a textbook diagram, a homework problem, or messy board notes.</p>
+        <div class="mode-card__demo">
+          <div class="photo-chip"><span class="thumb"></span> page&nbsp;142 · <b style="color:var(--t-strong)">photosynthesis.jpg</b></div>
+        </div>
+      </article>
+
+      <article class="mode-card reveal d2">
+        <div class="mode-card__icon">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Say it</h3>
+        <p>Talk it out loud, in your own words. We listen and turn rambling into a real question.</p>
+        <div class="mode-card__demo">
+          <div class="wave" id="modeWave"></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STUDIO — pinned deck-gen ===================== -->
+<section class="studio" id="studio" data-screen-label="Deck generation">
+  <div class="studio__sticky">
+    <div class="studio__glow" id="studioGlow"></div>
+
+    <div class="studio__label">
+      <div class="eyebrow">Watch it build</div>
+      <h2 class="serif" id="studioTitle">From doubt to deck</h2>
+    </div>
+
+    <div class="screen">
+      <div class="screen__bar">
+        <span class="dot3 r"></span><span class="dot3 y"></span><span class="dot3 g"></span>
+        <span class="url">studenthub.app/generating</span>
+      </div>
+      <div class="screen__body">
+
+        <!-- STAGE 0: prompt -->
+        <div class="stage stage--prompt" data-stage="0">
+          <div class="promptbox">
+            <span style="color:var(--accent);font-size:22px;">"</span>
+            <div class="q">How does photosynthesis actually work?</div>
+          </div>
+          <div class="hint">Doubt received · building your lesson…</div>
+        </div>
+
+        <!-- STAGE 1: thinking -->
+        <div class="stage stage--think" data-stage="1">
+          <div class="think-orb"></div>
+          <ul class="think-steps" id="thinkSteps">
+            <li data-t="0.18"><span class="tick"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Understanding the question</li>
+            <li data-t="0.24"><span class="tick"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Pulling the core concepts</li>
+            <li data-t="0.30"><span class="tick"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Structuring the slides</li>
+          </ul>
+        </div>
+
+        <!-- STAGE 2: title slide -->
+        <div class="stage" data-stage="2">
+          <div class="slide-canvas">
+            <div class="slide-top"><span class="kicker">Biology · Class lesson</span><span class="pg">01 / 04</span></div>
+            <div class="slide-main" style="justify-content:center;">
+              <h3 style="font-size:clamp(24px,3.4vw,40px);">Photosynthesis</h3>
+              <p style="font-size:clamp(14px,1.8vw,18px);color:var(--t-muted);max-width:46ch;">How a leaf turns sunlight, water and air into the food that powers almost all life on Earth.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 3: flowchart slide -->
+        <div class="stage" data-stage="3">
+          <div class="slide-canvas">
+            <div class="slide-top"><span class="kicker">The process · flowchart</span><span class="pg">02 / 04</span></div>
+            <div class="slide-main">
+              <h3>The reaction, step by step</h3>
+              <div class="flow">
+                <div class="node">Sunlight hits the leaf</div>
+                <span class="arrow">→</span>
+                <div class="node">Chlorophyll absorbs energy</div>
+                <span class="arrow">→</span>
+                <div class="node alt">Water + CO₂ split &amp; combine</div>
+                <span class="arrow">→</span>
+                <div class="node">Glucose + O₂</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 4: diagram slide -->
+        <div class="stage" data-stage="4">
+          <div class="slide-canvas">
+            <div class="slide-top"><span class="kicker">Inside the cell · diagram</span><span class="pg">03 / 04</span></div>
+            <div class="slide-main">
+              <div class="diagram">
+                <div class="diagram__viz">
+                  <div class="cell">
+                    <span class="organelle nucleus"></span>
+                    <span class="organelle chloro"></span>
+                    <span class="organelle chloro2"></span>
+                  </div>
+                </div>
+                <div class="diagram__legend">
+                  <div class="lg"><span class="sw" style="background:var(--indigo)"></span><span class="t"><b>Chloroplasts</b><span>Where light is captured</span></span></div>
+                  <div class="lg"><span class="sw" style="background:var(--amber)"></span><span class="t"><b>Nucleus</b><span>Holds the plant's instructions</span></span></div>
+                  <div class="lg"><span class="sw" style="background:#8b7bff"></span><span class="t"><b>Cell wall</b><span>Keeps everything in shape</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 5: explanation slide -->
+        <div class="stage" data-stage="5">
+          <div class="slide-canvas">
+            <div class="slide-top"><span class="kicker">In plain words · summary</span><span class="pg">04 / 04</span></div>
+            <div class="slide-main">
+              <h3 style="margin-bottom:14px;">Why it matters</h3>
+              <div class="explain">
+                <div class="pt"><span class="n">1</span><p><b>It's the plant's kitchen.</b> Leaves make their own food instead of eating it.</p></div>
+                <div class="pt"><span class="n">2</span><p><b>It feeds us too.</b> The glucose becomes fruit, grain and energy up the food chain.</p></div>
+                <div class="pt"><span class="n">3</span><p><b>It makes the air breathable.</b> The oxygen released is the same oxygen you're breathing now.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="studio__rail" id="studioRail">
+      <div class="rail-step" data-rail="2"><span class="ix">1</span>Title</div>
+      <div class="rail-step" data-rail="3"><span class="ix">2</span>Flowchart</div>
+      <div class="rail-step" data-rail="4"><span class="ix">3</span>Diagram</div>
+      <div class="rail-step" data-rail="5"><span class="ix">4</span>Explanation</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FLOWCHARTS & DIAGRAMS ===================== -->
+<section class="feature" id="diagrams" data-screen-label="Flowcharts & diagrams">
+  <div class="wrap">
+    <div class="feature__row">
+      <div class="feature__copy reveal">
+        <div class="eyebrow">Flowcharts &amp; diagrams</div>
+        <h2 class="serif">It draws, so you can see it.</h2>
+        <p class="lead">Words alone rarely make a concept click. aha turns every explanation into clean flowcharts and labelled diagrams — the kind you'd wish your textbook had.</p>
+        <ul class="bullets">
+          <li><span class="ck"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Step-by-step flowcharts for any process</li>
+          <li><span class="ck"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Labelled diagrams that name every part</li>
+          <li><span class="ck"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Colour-coded so relationships pop out</li>
+        </ul>
+      </div>
+      <div class="feature__media reveal d1">
+        <div class="flow-art">
+          <div class="fnode">Light energy from the sun</div>
+          <div class="conn"></div>
+          <div class="branch">
+            <div class="fnode">Water (H₂O)</div>
+            <div class="fnode">Carbon dioxide (CO₂)</div>
+          </div>
+          <div class="conn"></div>
+          <div class="fnode amber">Light-dependent reactions</div>
+          <div class="conn"></div>
+          <div class="fnode">Glucose (C₆H₁₂O₆) + Oxygen (O₂)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== NARRATION ===================== -->
+<section class="narrate" id="narrate" data-screen-label="AI narrates">
+  <div class="narrate__glow"></div>
+  <div class="wrap">
+    <div class="narrate__grid">
+      <div class="narrate__copy reveal">
+        <div class="eyebrow">A tutor, not just a deck</div>
+        <h2 class="serif">It explains every slide, out loud.</h2>
+        <p class="lead">Press play and Student Hub talks you through the lesson slide by slide — at your pace, highlighting the words as it speaks. Lost? Tap any line to ask a follow-up and it remembers exactly where you were.</p>
+      </div>
+
+      <div class="player reveal d1">
+        <div class="player__avatar">
+          <span class="player__orb"></span>
+          <span class="who"><b>Student Hub tutor</b><span>explaining slide 2 of 4</span></span>
+        </div>
+        <div class="player__slide">
+          <span class="kicker">The process</span>
+          <h4>The reaction, step by step</h4>
+          <p class="cap" id="narrateCap">Sunlight hits the leaf and <span class="hl">chlorophyll</span> — the green pigment — soaks up that energy to power the whole reaction.</p>
+        </div>
+        <div class="player__controls">
+          <button class="player__play" id="playBtn" aria-label="Play narration">
+            <svg id="playIcon" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <div class="player__wave" id="playerWave"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DEPTH SLIDER ===================== -->
+<section class="depth" id="depth" data-screen-label="Depth slider">
+  <div class="wrap">
+    <div class="depth__head reveal">
+      <div class="eyebrow">One topic, your level</div>
+      <h2 class="serif">Explain it like I'm 5. Or ready for the exam.</h2>
+      <p>Slide between depths and the whole lesson rewrites itself — same concept, totally different words.</p>
+    </div>
+
+    <div class="depth__panel reveal d1">
+      <div class="depth__levels" id="depthLevels">
+        <button data-lv="0" class="active">Like I'm 5</button>
+        <button data-lv="1">Class 10</button>
+        <button data-lv="2">Exam-ready</button>
+      </div>
+      <div class="depth__track">
+        <div class="depth__fill" id="depthFill" style="width:0%"></div>
+        <input type="range" class="depth__range" id="depthRange" min="0" max="2" step="1" value="0">
+      </div>
+      <div class="depth__content">
+        <span class="depth__tag" id="depthTag">Like I'm 5</span>
+        <p class="depth__text" id="depthText">Plants make their own food! A leaf catches sunlight and mixes it with water and air to cook up sugar — and breathes out the oxygen that we need to live.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LIBRARY + STREAK ===================== -->
+<section class="library" id="library" data-screen-label="My Doubts library">
+  <div class="wrap">
+    <div class="library__head">
+      <div class="reveal">
+        <div class="eyebrow">My Doubts</div>
+        <h2 class="serif">Every doubt, saved and revised.</h2>
+      </div>
+      <p class="reveal d1" style="max-width:360px;font-size:16px;line-height:1.6;color:var(--t-on-dark-soft);">One panicked question becomes a revision library. Student Hub resurfaces old lessons right before you'd forget them — and rewards you for showing up.</p>
+    </div>
+
+    <div class="library__grid">
+      <div class="doubts reveal">
+        <article class="doubt">
+          <span class="doubt__tag bio">Biology</span>
+          <h4>How does photosynthesis actually work?</h4>
+          <div class="doubt__meta"><span class="slides">4 slides</span> · <span>Today</span></div>
+        </article>
+        <article class="doubt">
+          <span class="doubt__tag phy">Physics</span>
+          <h4>Why does a moving train sound different?</h4>
+          <div class="doubt__meta"><span class="slides">5 slides</span> · <span>Yesterday</span></div>
+        </article>
+        <article class="doubt">
+          <span class="doubt__tag math">Maths</span>
+          <h4>What is a derivative, in plain words?</h4>
+          <div class="doubt__meta"><span class="slides">6 slides</span> · <span>2 days ago</span></div>
+        </article>
+        <article class="doubt">
+          <span class="doubt__tag">History</span>
+          <h4>What actually caused World War I?</h4>
+          <div class="doubt__meta"><span class="slides">7 slides</span> · <span>3 days ago</span></div>
+        </article>
+      </div>
+
+      <div class="streak reveal d1">
+        <div class="streak__num">
+          <svg class="fire" viewBox="0 0 40 46" fill="none"><path d="M20 2c2 8-4 11-7 16-2 3-3 6-3 10a10 10 0 0020 0c0-5-3-8-3-12 4 2 6 5 6 10a13 13 0 11-26 0c0-9 8-13 13-24z" fill="var(--amber)"/></svg>
+          12
+        </div>
+        <div class="streak__lbl">day streak · keep it alive!</div>
+        <div class="streak__week">
+          <div class="streak__day on"><span class="d"></span><span class="lbl">M</span></div>
+          <div class="streak__day on"><span class="d"></span><span class="lbl">T</span></div>
+          <div class="streak__day on"><span class="d"></span><span class="lbl">W</span></div>
+          <div class="streak__day on"><span class="d"></span><span class="lbl">T</span></div>
+          <div class="streak__day on"><span class="d"></span><span class="lbl">F</span></div>
+          <div class="streak__day"><span class="d"></span><span class="lbl">S</span></div>
+          <div class="streak__day"><span class="d"></span><span class="lbl">S</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="cta" id="cta" data-screen-label="Get started">
+  <div class="wrap">
+    <h2 class="serif reveal">Never be <em>stuck</em> again.</h2>
+    <p class="reveal d1">Bring your next doubt. Walk away understanding it — and with a deck you can revise from forever.</p>
+    <form class="cta__form reveal d2" action="/login.html" method="get">
+      <input type="email" placeholder="you@school.edu" aria-label="Email">
+      <button class="btn btn--primary" type="submit">Start learning →</button>
+    </form>
+    <div class="cta__note reveal d2">Free for students · No card needed</div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__top">
+      <div>
+        <a class="brand" href="#top">
+          <span class="brand__mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+          <span class="brand__word">Student Hub</span>
+        </a>
+        <p class="footer__tag">The AI study companion that turns any doubt into a lesson you actually understand.</p>
+      </div>
+      <div class="footer__cols">
+        <div class="footer__col">
+          <h5>Product</h5>
+          <a href="#how">How it works</a>
+          <a href="#studio">The deck</a>
+          <a href="#depth">Depth slider</a>
+          <a href="#library">My Doubts</a>
+        </div>
+        <div class="footer__col">
+          <h5>For</h5>
+          <a href="#">School students</a>
+          <a href="#">College</a>
+          <a href="#">Exam prep</a>
+          <a href="#">Teachers</a>
+        </div>
+        <div class="footer__col">
+          <h5>Company</h5>
+          <a href="#">About</a>
+          <a href="#">Privacy</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Student Hub — built for curious students.</span>
+      <span>Made for curious students.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

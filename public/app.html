@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Hub — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="app.css?v=11">
+<link rel="stylesheet" href="classroom.css?v=11">
+<link rel="stylesheet" href="debate-arena.css?v=11">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="app-body">
+<div class="aurora"></div>
+<div class="app-grain"></div>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="side">
+    <a class="brand side__brand" href="/">
+      <span class="brand__mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+      <span class="brand__word">Student Hub</span>
+    </a>
+
+    <nav class="side__nav">
+      <button class="side__link active" data-view="ask">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Ask a doubt</span>
+      </button>
+      <button class="side__link" data-view="library">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M4 9h16" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span>My Doubts</span>
+      </button>
+      <button class="side__link" data-view="practice">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/></svg>
+        <span>Practice</span>
+      </button>
+      <button class="side__link" data-view="coach">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Speaking Coach</span>
+      </button>
+      <button class="side__link" data-view="debate">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h11a2 2 0 012 2v5a2 2 0 01-2 2H9l-4 3v-3H4a2 2 0 01-2-2V7a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M20 9v6a2 2 0 01-2 2h-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Group Study</span>
+      </button>
+      <button class="side__link" data-view="events">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 01-12 0V4zM6 6H4v1a3 3 0 003 3M18 6h2v1a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Competitions</span>
+      </button>
+    </nav>
+
+    <div class="side__foot">
+      <div class="side__user">
+        <span class="side__avatar" id="userInitial">S</span>
+        <span class="side__user-meta"><b id="userName">Student</b><i id="userEmailSmall"></i></span>
+      </div>
+      <button class="side__logout" id="logoutBtn" title="Log out">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M14 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-2M10 12h10m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <!-- ===== ASK VIEW ===== -->
+    <section class="view active" id="view-ask">
+      <header class="main__head">
+        <div class="main__greet">
+          <div class="eyebrow accent">Your AI study companion</div>
+          <h1 class="serif" id="greetTitle">What are you stuck on?</h1>
+        </div>
+        <div class="statline">
+          <div class="stat"><span class="stat__n" id="statDoubts">0</span><span class="stat__l">doubts solved</span></div>
+        </div>
+      </header>
+
+      <!-- ASK CARD -->
+      <div class="askcard">
+        <div class="askcard__top">
+          <div class="segmented" id="modeSeg">
+            <button class="seg active" data-mode="text"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Type</button>
+            <button class="seg" data-mode="photo"><svg viewBox="0 0 24 24" fill="none"><path d="M3 8a2 2 0 012-2h2l1.2-1.6A1 1 0 019 4h6a1 1 0 01.8.4L17 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12.5" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg> Photo</button>
+            <button class="seg" data-mode="voice"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Voice</button>
+            <button class="seg" data-mode="pdf"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13a0 0 0 010 0H7a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v5h5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.5 14.5h7M8.5 17.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> PDF</button>
+          </div>
+          <div class="askcard__selects">
+            <label class="pill-select">Notes language
+              <select id="language">
+                <option selected>English</option><option>Hindi</option><option>Kannada</option>
+              </select>
+            </label>
+            <label class="pill-select">AI Teacher speaks
+              <select id="teacherLang">
+                <option selected>English</option><option>Hindi</option><option>Kannada</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <textarea id="doubtText" rows="3" placeholder="Ask in English, Hindi or Kannada — even mixed. e.g. &quot;ye reaction kaise hota hai?&quot;"></textarea>
+        <input type="file" id="photoInput" accept="image/*" hidden>
+        <input type="file" id="pdfInput" accept="application/pdf" hidden>
+
+        <!-- upload buttons — shown only inside the Photo / PDF tabs -->
+        <div class="attachbar" id="attachBar" hidden>
+          <button type="button" class="attachbtn" id="attachPhoto" hidden>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 8a2 2 0 012-2h2l1.2-1.6A1 1 0 019 4h6a1 1 0 01.8.4L17 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12.5" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg>
+            Upload photo
+          </button>
+          <button type="button" class="attachbtn" id="attachPdf" hidden>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v5h5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            Upload PDF
+          </button>
+          <span class="attachbar__hint" id="attachHint"></span>
+        </div>
+
+        <!-- preview of an uploaded photo / PDF (with a remove button) -->
+        <div class="uploadprev" id="uploadPrev" hidden></div>
+
+        <!-- explicit voice recorder (only shown in Voice mode) -->
+        <div class="voicebar" id="voiceBar" hidden>
+          <button class="recbtn" id="askRec" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="#fff" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="askRecLbl">Start recording</span>
+          </button>
+          <span class="recbtn__hint" id="askRecHint">Tap start, speak your doubt, then tap again to stop.</span>
+        </div>
+
+        <div class="askcard__bottom">
+          <div class="askcard__status" id="askStatus"></div>
+          <button class="askcard__send" id="askSend">
+            <span>Build my lesson</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- QUICK CHIPS -->
+      <div class="quick" id="quickChips">
+        <span class="quick__lbl">Try:</span>
+        <button class="chip" data-q="Why is the sky blue?">Why is the sky blue?</button>
+        <button class="chip" data-q="Photosynthesis ki process samjhao simple way me">Hinglish: photosynthesis samjhao</button>
+        <button class="chip" data-q="Newton's laws of motion ಕನ್ನಡದಲ್ಲಿ ವಿವರಿಸಿ">ಕನ್ನಡ: Newton's laws</button>
+        <button class="chip" data-q="What is a derivative in calculus, in plain words?">What's a derivative?</button>
+      </div>
+
+      <!-- generating -->
+      <div class="gen" id="gen" hidden>
+        <div class="gen__orb"></div>
+        <div class="gen__body">
+          <h4>Building your lesson…</h4>
+          <ul class="gen__steps">
+            <li id="gs0">Understanding the question</li>
+            <li id="gs1">Pulling the core concepts</li>
+            <li id="gs2">Drawing flowcharts &amp; diagrams</li>
+            <li id="gs3">Writing the tutor narration</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- result deck + tutor -->
+      <div class="lesson" id="lesson" hidden>
+        <div class="lesson__deck">
+          <div class="lesson__deckhead">
+            <span class="lesson__subject" id="lessonSubject">Lesson</span>
+            <div class="lesson__acts">
+              <button class="lesson__dl" id="practiceThis">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/></svg>
+                Practice this
+              </button>
+              <button class="lesson__dl" id="dlPptx">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>.pptx</span>
+              </button>
+            </div>
+          </div>
+          <div class="lesson__rail" id="deckRail"></div>
+          <div class="lesson__stage" id="deckStage"></div>
+          <div class="lesson__deckbar">
+            <button class="navbtn" id="prevSlide">‹</button>
+            <span id="slideCount">1 / 4</span>
+            <button class="navbtn" id="nextSlide">›</button>
+          </div>
+        </div>
+
+        <aside class="tutor">
+          <div class="tutor__cap" id="tutorCap">Press play for a quick answer — or learn it live with your AI Teacher.</div>
+          <button class="tutor__play" id="tutorPlay"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></button>
+          <div class="lesson__choice">
+            <button class="learnbtn" id="learnWithTeacher" type="button">
+              <span class="emo">🎓</span>
+              <span>Learn with AI Teacher</span>
+              <span class="spark"></span>
+            </button>
+            <span class="hint">Opens a live classroom — the teacher walks you through every slide.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== LIBRARY VIEW ===== -->
+    <section class="view" id="view-library">
+      <header class="main__head"><div class="main__greet"><div class="eyebrow accent">My Doubts</div><h1 class="serif">Every doubt, saved.</h1></div></header>
+      <div class="doubts" id="doubtsList"></div>
+    </section>
+
+    <!-- ===== PRACTICE VIEW ===== -->
+    <section class="view" id="view-practice">
+      <header class="main__head">
+        <div class="main__greet"><div class="eyebrow accent">Active recall</div><h1 class="serif">Practice &amp; test yourself.</h1></div>
+        <div class="statline"><div class="stat"><span class="stat__n" id="pracBest">—</span><span class="stat__l">best score</span></div></div>
+      </header>
+
+      <div class="pcard">
+        <p class="pcard__hint">Pick a topic you've studied, or type any topic — I'll build a short quiz from it and mark every answer.</p>
+        <div class="pcard__row">
+          <label class="pill-select">From a saved doubt
+            <select id="pracDoubt"><option value="">— choose —</option></select>
+          </label>
+          <span class="pcard__or">or</span>
+          <input class="pinput" id="pracTopic" placeholder="type a topic, e.g. Newton's second law">
+          <label class="pill-select">Language
+            <select id="pracLang"><option value="Auto" selected>Auto</option><option>English</option><option>Hindi</option><option>Kannada</option></select>
+          </label>
+          <button class="askcard__send pcard__go" id="pracGo"><span>Build quiz</span></button>
+        </div>
+        <div class="askcard__status" id="pracStatus"></div>
+      </div>
+
+      <div class="quiz" id="quizBox" hidden>
+        <div class="quiz__head">
+          <h3 id="quizTitle">Quiz</h3>
+          <span class="quiz__prog" id="quizProg"></span>
+        </div>
+        <div id="quizList"></div>
+        <div class="quiz__foot">
+          <button class="askcard__send" id="quizSubmit"><span>Submit &amp; mark</span></button>
+          <button class="lesson__dl" id="quizRetry" hidden>New quiz</button>
+        </div>
+        <div class="quiz__score" id="quizScore" hidden></div>
+      </div>
+    </section>
+
+    <!-- ===== SPEAKING COACH VIEW ===== -->
+    <!-- ===== SPEAKING COACH & AI INTERVIEWER VIEW ===== -->
+    <section class="view" id="view-coach">
+      <header class="main__head">
+        <div class="main__greet"><div class="eyebrow accent">Real-time Placement &amp; Viva Prep</div><h1 class="serif">AI Interviewer &amp; Speaking Coach.</h1></div>
+        <div class="statline"><div class="stat"><span class="stat__n" id="coachReps">0</span><span class="stat__l">interviews completed</span></div></div>
+      </header>
+
+      <!-- SETUP FORM -->
+      <div class="itv-form" id="itvSetup">
+        <p class="pcard__hint">Configure your real AI interview session. Enter your candidate details, topic skills, education, and question count. The AI interviewer will speak each question out loud, record your live camera answer, and evaluate your full interview performance.</p>
+
+        <div class="itv-grid">
+          <div class="itv-field">
+            <label>Your Name</label>
+            <input class="pinput" id="itvName" placeholder="e.g. Rahul Sharma">
+          </div>
+          <div class="itv-field">
+            <label>Interview Type</label>
+            <select class="pinput" id="itvType">
+              <option value="hr" selected>HR &amp; Behavioural Interview</option>
+              <option value="technical">Technical / Coding &amp; Core Concepts</option>
+              <option value="viva">Academic Viva / Subject Examination</option>
+              <option value="project">Final-Year Project Defense</option>
+              <option value="custom">Custom Special Topic</option>
+            </select>
+          </div>
+          <div class="itv-field">
+            <label>Skills / Key Topics</label>
+            <input class="pinput" id="itvSkills" placeholder="e.g. React, Data Structures, Physics, Biology">
+          </div>
+          <div class="itv-field">
+            <label>Education / Qualification</label>
+            <select class="pinput" id="itvEdu">
+              <option value="B.Tech / BE" selected>B.Tech / BE / Engineering</option>
+              <option value="High School Class 10/12">High School Class 10 / 12</option>
+              <option value="Degree / BSc / BCA">Degree / BSc / BCA / BCom</option>
+              <option value="Postgraduate / M.Tech">Postgraduate / M.Tech / MCA</option>
+            </select>
+          </div>
+          <div class="itv-field">
+            <label>Target Role / Exam</label>
+            <input class="pinput" id="itvRole" placeholder="e.g. Software Engineer, Viva Exam">
+          </div>
+          <div class="itv-field">
+            <label>Number of Questions</label>
+            <select class="pinput" id="itvCount">
+              <option value="1">1 Question (Quick Single-Question Test)</option>
+              <option value="3">3 Questions (Quick Practice)</option>
+              <option value="4" selected>4 Questions (Standard)</option>
+              <option value="5">5 Questions (In-depth)</option>
+              <option value="10">10 Questions (Full Mock Interview)</option>
+            </select>
+          </div>
+          <div class="itv-field">
+            <label>Language</label>
+            <select class="pinput" id="itvLang">
+              <option value="English" selected>English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Kannada">Kannada</option>
+              <option value="Hinglish">Hinglish</option>
+            </select>
+          </div>
+          <div class="itv-field">
+            <label>Company Pattern</label>
+            <select class="pinput" id="itvCompany">
+              <option value="" selected>Generic / No specific company</option>
+              <option value="campus">Campus placement (general)</option>
+              <option value="tcs">TCS — NQT / Ninja / Digital</option>
+              <option value="infosys">Infosys — SP / DSE / Power Programmer</option>
+              <option value="wipro">Wipro — Elite NTH / Turbo</option>
+              <option value="accenture">Accenture</option>
+              <option value="cognizant">Cognizant — GenC / GenC Next</option>
+              <option value="capgemini">Capgemini</option>
+              <option value="product">Product company / Startup (SDE)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Resume + JD: makes the interview about THEIR projects, not generic questions -->
+        <div class="itv-resume">
+          <div class="itv-resume__row">
+            <div>
+              <label class="itv-resume__label">Your Resume <span>(PDF — questions get asked about your real projects)</span></label>
+              <div class="itv-resume__pick">
+                <button class="itv-resume__btn" id="itvResumeBtn" type="button">📄 Upload resume</button>
+                <span class="itv-resume__name" id="itvResumeName">No resume attached</span>
+                <button class="itv-resume__clear" id="itvResumeClear" type="button" hidden>✕</button>
+              </div>
+              <input type="file" id="itvResume" accept="application/pdf" hidden>
+            </div>
+          </div>
+          <div class="itv-field">
+            <label>Job Description <span style="font-weight:400;opacity:.7">(optional — paste the JD you're applying to)</span></label>
+            <textarea class="pinput" id="itvJD" rows="3" placeholder="Paste the job description here and the interviewer will target it…"></textarea>
+          </div>
+        </div>
+
+        <button class="dbt-btn dbt-btn--primary" id="itvStart">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          Start Live AI Interview
+        </button>
+        <div class="askcard__status" id="itvStatus"></div>
+      </div>
+
+      <!-- LIVE INTERVIEW STAGE -->
+      <div class="itv-stage" id="itvStage" hidden>
+        <div class="itv-stage__head">
+          <span class="itv-stage__title" id="itvTitle">Live AI Interview</span>
+          <span class="itv-stage__prog" id="itvProg">Question 1 of 4</span>
+        </div>
+
+        <div class="itv-qbox">
+          <span class="itv-qbox__tag">Question from AI Interviewer</span>
+          <div class="itv-qbox__text" id="itvQText">Preparing question...</div>
+          <div class="itv-qbox__hint" id="itvQHint">Listen to the interviewer and prepare your spoken answer.</div>
+          <button class="itv-qbox__speakbtn" id="itvReplayQ" title="Replay AI spoken question">
+            <svg viewBox="0 0 24 24" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="#fff" stroke-width="1.8"/><path d="M15.54 8.46a5 5 0 010 7.07" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div class="itv-video-wrap">
+          <video class="itv-video" id="itvVideo" autoplay muted playsinline></video>
+          <span class="itv-video-badge"><span class="itv-video-dot"></span> LIVE INTERVIEW CAMERA</span>
+        </div>
+
+        <div class="itv-actions">
+          <button class="recbtn" id="itvRecordBtn">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="#fff" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="itvRecordLbl">Start Spoken Answer</span>
+          </button>
+          <button class="dbt-floor" id="itvNextBtn" hidden>
+            <span>Submit Answer &amp; Next Question →</span>
+          </button>
+          <button class="dbt-btn dbt-btn--end" id="itvEndBtn">End &amp; Evaluate</button>
+        </div>
+        <div class="askcard__status" id="itvStageStatus"></div>
+      </div>
+
+      <!-- INTERVIEW REPORT CARD -->
+      <div class="report" id="itvReport" hidden></div>
+    </section>
+
+    <!-- ===== GROUP STUDY / DEBATE VIEW ===== -->
+    <section class="view" id="view-debate">
+      <header class="main__head">
+        <div class="main__greet">
+          <div class="eyebrow accent">Group Study</div>
+          <h1 class="serif">Live debate room.</h1>
+          <p class="main__lead">Share a room code, turn on your camera, and debate. When you finish, the AI judges who argued best — with key points, plus and minus for everyone.</p>
+        </div>
+      </header>
+
+      <!-- LOBBY -->
+      <div class="dbt-lobby" id="dbtLobby">
+        <div class="dbt-card dbt-lobby-glass">
+          <div class="dbt-card__badge">🚀 LIVE DEBATE HUB</div>
+          <h3 class="dbt-card__t">Join or Start a Live Debate Room</h3>
+          
+          <div class="dbt-field">
+            <label>Your Name</label>
+            <input class="pinput dbt-input-glow" id="dbtName" placeholder="e.g. Om Diggi">
+          </div>
+          <div class="dbt-field">
+            <label>Student ID <span class="dbt-hint">(Roll No. / USN)</span></label>
+            <input class="pinput dbt-input-glow" id="dbtId" placeholder="e.g. 1TE25CS183">
+          </div>
+
+          <div class="dbt-actions-grid">
+            <button class="dbt-btn dbt-btn--start-room" id="dbtCreate" onclick="window.startDebateRoom &amp;&amp; window.startDebateRoom(true)">
+              <span class="dbt-btn-icon">🚀</span>
+              <div class="dbt-btn-text">
+                <b>Start Debate Room</b>
+                <span>Create instant room code &amp; host session</span>
+              </div>
+            </button>
+
+            <div class="dbt-or-divider"><span>OR JOIN EXISTING ROOM</span></div>
+
+            <div class="dbt-join-box">
+              <input class="pinput dbt-input-glow" id="dbtRoom" placeholder="Enter Room Code (e.g. DEBATE-ROOM-4829)" autocomplete="off">
+              <button class="dbt-btn dbt-btn--join-room" id="dbtJoin" onclick="window.startDebateRoom &amp;&amp; window.startDebateRoom(false)">
+                <span>🔑 Join Room</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="dbt-or-divider"><span>OR PRACTICE SOLO WITH AI</span></div>
+
+          <button class="dbt-btn dbt-btn--ai-debate" id="dbtAIDebate" onclick="window.startAIDebate && window.startAIDebate()">
+            <span class="dbt-btn-icon">🤖</span>
+            <div class="dbt-btn-text">
+              <b>Debate with AI</b>
+              <span>Practice debating with an AI opponent using voice</span>
+            </div>
+          </button>
+
+          <div class="dbt-status" id="dbtLobbyStatus"></div>
+        </div>
+
+        <div class="dbt-card dbt-card--how dbt-lobby-glass">
+          <h3 class="dbt-card__t">How It Works</h3>
+          <ol class="dbt-how">
+            <li><span class="dbt-step-num">1</span> <b>Start Debate Room</b> → share code with debaters.</li>
+            <li><span class="dbt-step-num">2</span> Everyone <b>joins with Name + Student ID</b>.</li>
+            <li><span class="dbt-step-num">3</span> Pick a topic or tap <b>AI Topic Generator</b>.</li>
+            <li><span class="dbt-step-num">4</span> Tap <b>Take the floor</b> to deliver your argument.</li>
+            <li><span class="dbt-step-num">5</span> Tap <b>End &amp; Analyse</b> → AI evaluates the winner!</li>
+            <li><span class="dbt-step-num">🤖</span> Or tap <b>Debate with AI</b> to practice solo with a voice-based AI opponent!</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- ROOM -->
+      <div class="dbt-room" id="dbtRoom-wrap" hidden>
+        <div class="dbt-roombar">
+          <div class="dbt-roombar__l">
+            <span class="dbt-live" id="dbtLive"><span class="dot"></span> LIVE DEBATE</span>
+            <button class="dbt-code" id="dbtCodeCopy" title="Click to copy room code"><b id="dbtCodeText">—</b>
+              <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M5 15V5a2 2 0 012-2h8" stroke="currentColor" stroke-width="1.7"/></svg>
+            </button>
+            <span class="dbt-timer" id="dbtTimer">⏱️ 00:00</span>
+            <span class="dbt-count" id="dbtCount">1 in room</span>
+          </div>
+          <button class="dbt-btn dbt-btn--ghost" id="dbtLeave">Leave Meeting</button>
+        </div>
+
+        <!-- topic -->
+        <div class="dbt-topic">
+          <div class="dbt-topic__in">
+            <input class="pinput" id="dbtTopicInput" placeholder="Type a debate topic… or let the AI pick one">
+            <button class="dbt-btn" id="dbtTopicSet">Set topic</button>
+            <button class="dbt-btn dbt-btn--amber" id="dbtTopicAI">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              AI topic
+            </button>
+          </div>
+          <div class="dbt-motion" id="dbtMotion" hidden></div>
+        </div>
+
+        <!-- main meeting stage (video grid + collapsible meeting chat) -->
+        <div class="dbt-main-stage">
+          <div class="dbt-grid" id="dbtGrid"></div>
+          
+          <div class="dbt-sidebar" id="dbtSidebar" hidden>
+            <div class="dbt-sidebar__head">
+              <b>In-call chat</b>
+              <button id="dbtChatClose" class="dbt-icon-btn">✕</button>
+            </div>
+            <div class="dbt-chat__box" id="dbtChatBox">
+              <div class="dbt-chat__msg sys">Messages can be seen only by people in the call.</div>
+            </div>
+            <div class="dbt-chat__in">
+              <input class="pinput" id="dbtChatMsg" placeholder="Send a message to everyone…">
+              <button class="dbt-btn dbt-btn--primary" id="dbtChatSend">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- controls (Google Meet style) -->
+        <div class="dbt-controls">
+          <button class="dbt-ctl" id="dbtCam" title="Turn camera on/off">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h10a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7"/><path d="M16 10l6-3v10l-6-3" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="dbt-ctl" id="dbtMic" title="Mute/unmute microphone">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
+          <button class="dbt-ctl" id="dbtHand" title="Raise your hand">
+            <span>✋</span>
+          </button>
+          <button class="dbt-ctl" id="dbtScreen" title="Share Screen">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M12 16v4M8 20h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
+          <button class="dbt-ctl" id="dbtChatToggle" title="Meeting Chat">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" stroke-width="1.7"/></svg>
+          </button>
+          <button class="dbt-floor" id="dbtFloor" title="Raise hand / Speak in debate">
+            <svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+            <span>Take the floor</span>
+          </button>
+          <button class="dbt-btn dbt-btn--end" id="dbtEnd" title="End debate & get AI judge score">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/></svg>
+            End &amp; Analyse
+          </button>
+        </div>
+        <div class="dbt-status" id="dbtRoomStatus"></div>
+
+        <!-- results -->
+        <div class="dbt-results" id="dbtResults" hidden></div>
+      </div>
+    </section>
+
+    <!-- ===== EVENTS (HACKATHONS / WORKSHOPS) VIEW ===== -->
+    <section class="view" id="view-events">
+      <header class="main__head">
+        <div class="main__greet"><div class="eyebrow accent">Near you</div><h1 class="serif">Competitions &amp; workshops.</h1></div>
+        <div class="statline">
+          <div class="stat"><span class="stat__n" id="evtNear">—</span><span class="stat__l">nearby</span></div>
+          <div class="stat"><span class="stat__n" id="evtOnline">—</span><span class="stat__l">online</span></div>
+        </div>
+      </header>
+
+      <div class="evt-controls">
+        <div class="segmented" id="evtType">
+          <button class="seg active" data-type="hackathon">Hackathons</button>
+          <button class="seg" data-type="workshop">Workshops</button>
+          <button class="seg" data-type="all">All</button>
+        </div>
+        <label class="pill-select">Show
+          <select id="evtScope"><option value="all" selected>In-person + online</option><option value="inperson">In-person only</option></select>
+        </label>
+
+        <!-- 🔍 City Search Bar -->
+        <div class="evt-search-box">
+          <svg class="evt-search-icon" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35M19 11a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input class="pinput evt-search-input" id="evtCityInput" placeholder="Search city (e.g. Bengaluru, Chennai, Hyderabad, Mumbai…)">
+          <button class="evt-search-btn" id="evtCityGo">Search City</button>
+        </div>
+
+        <button class="lesson__dl" id="evtLocate" title="Find competitions near your GPS location">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>
+          Near Me
+        </button>
+      </div>
+      <div class="askcard__status" id="evtStatus"></div>
+
+      <div class="evt-layout">
+        <div class="evt-map" id="evtMap"></div>
+        <div class="evt-list" id="evtList">
+          <p class="evt-empty">Tap “Use my location” and I’ll map the competitions happening closest to you.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="app.js?v=11"></script>
+<script src="debate.js?v=11"></script>
+<script src="debate-arena.js?v=11"></script>
+</body>
+</html>

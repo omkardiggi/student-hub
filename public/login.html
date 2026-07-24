@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Hub — Log in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="auth-body">
+  <div class="auth-split">
+    <aside class="auth-art">
+      <video class="auth-art__video" autoplay muted loop playsinline>
+        <source src="uploads/teacher.mp4" type="video/mp4">
+      </video>
+      <div class="auth-art__scrim"></div>
+      <div class="auth-art__inner">
+        <a class="brand" href="/"><span class="brand__mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="brand__word">Student Hub</span></a>
+        <h2 class="serif">Any doubt.<br><em>A whole lesson.</em></h2>
+        <p>Ask by text, photo or voice. Get a guided deck and a tutor who explains it — in your language.</p>
+      </div>
+    </aside>
+
+    <main class="auth-panel">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button id="tabLogin" class="active">Log in</button>
+          <button id="tabSignup">Sign up</button>
+        </div>
+        <h1 class="serif" id="authTitle">Welcome back</h1>
+        <p class="auth-sub" id="authSub">Pick up where you left off.</p>
+
+        <div class="auth-field" id="nameField" style="display:none">
+          <label>Name</label>
+          <input id="name" type="text" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <label>Email</label>
+          <input id="email" type="email" placeholder="you@school.edu" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <div class="auth-error" id="authError"></div>
+        <button class="btn btn--primary auth-submit" id="authBtn">Log in →</button>
+        <p class="auth-foot">Free for students · No card needed</p>
+      </div>
+    </main>
+  </div>
+  <script src="auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server.js" },
+    { "source": "/webhook/(.*)", "destination": "/server.js" },
+    { "source": "/avatar/(.*)", "destination": "/avatar/$1" },
+    { "source": "/(.*)", "destination": "/public/$1" }
+  ]
+}
