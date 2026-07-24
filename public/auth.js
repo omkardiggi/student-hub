@@ -25,8 +25,9 @@ async function submit() {
     const res = await fetch(mode === 'signup' ? '/api/register' : '/api/login', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Could not sign in.');
+    let data = {};
+    try { data = await res.json(); } catch {}
+    if (!res.ok) throw new Error(data.error || (res.status === 500 ? 'Server error — please try again.' : 'Could not sign in.'));
     location.href = '/app.html';
   } catch (e) {
     $('authError').textContent = e.message;
