@@ -293,6 +293,20 @@ app.post('/api/interview/evaluate', need, async (req, res) => {
 
 app.get('/api/speaking-history', need, (req, res) => res.json({ history: store.listSpeaking(req.session.user.email) }));
 
+/* ───────── TTS: neural voice audio (Cartesia / MsEdgeTTS) ───────── */
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, language = 'English', lessonTitle = '' } = req.body;
+    if (!text || !text.trim()) return res.status(400).json({ error: 'No text provided.' });
+    const buffer = await synthesize({ text, language, lessonTitle });
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(buffer);
+  } catch (e) {
+    fail(res, e);
+  }
+});
+
 /* ───────── Hackathons & workshops near me ───────── */
 app.get('/api/events', async (req, res) => {
   try {
