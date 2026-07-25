@@ -186,18 +186,6 @@ app.post('/api/ai-debate-reply', need, async (req, res) => {
   } catch (e) { fail(res, e); }
 });
 
-/* ───────── Optional neural TTS mp3 ───────── */
-app.post('/api/tts', need, async (req, res) => {
-  try {
-    const { text, language = 'English', lessonTitle = '' } = req.body;
-    const mp3 = await synthesize({ text, language, lessonTitle });
-    res.set('Content-Type', 'audio/mpeg').send(mp3);
-  } catch (e) {
-    console.error('[TTS Handler Error]:', e.message);
-    res.status(500).json({ error: e.message || 'TTS failed' });
-  }
-});
-
 /* ───────── My Doubts library ───────── */
 app.get('/api/doubts', need, (req, res) => res.json({ doubts: store.listDoubts(req.session.user.email) }));
 
