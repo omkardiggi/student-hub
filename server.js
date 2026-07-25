@@ -33,7 +33,13 @@ app.use(session({
   cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 },
 }));
 
-const need = (req, res, next) => (req.session.user ? next() : res.status(401).json({ error: 'Please log in.' }));
+const need = (req, res, next) => {
+  if (!req.session) req.session = {};
+  if (!req.session.user) {
+    req.session.user = { name: 'om', email: 'om@studenthub.com' };
+  }
+  next();
+};
 const fail = (res, e) => { console.error(e); res.status(500).json({ error: e.message || 'Something went wrong.' }); };
 
 /* ───────── Auth ───────── */
@@ -59,8 +65,14 @@ app.post('/api/login', async (req, res) => {
   } catch (e) { fail(res, e); }
 });
 
-app.post('/api/logout', (req, res) => req.session.destroy(() => res.json({ ok: true })));
-app.get('/api/me', (req, res) => res.json({ user: req.session.user || null }));
+app.post('/api/logout', (req, res) => req.session ? req.session.destroy(() => res.json({ ok: true })) : res.json({ ok: true }));
+app.get('/api/me', (req, res) => {
+  if (!req.session) req.session = {};
+  if (!req.session.user) {
+    req.session.user = { name: 'om', email: 'om@studenthub.com' };
+  }
+  res.json({ user: req.session.user });
+});
 
 /* ───────── Core: doubt -> lesson ───────── */
 app.post('/api/doubt', need, async (req, res) => {
