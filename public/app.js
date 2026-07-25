@@ -640,18 +640,36 @@ async function speakLine(text, langLabel, done) {
     const res = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, language: langLabel, lessonTitle: currentLesson?.title || '' }),
+      body: JSON.stringify({
+        text,
+        language: langLabel,
+        lessonTitle: currentLesson?.title || '',
+        role: 'tutor',
+        section: 'dashboard'
+      }),
     });
     if (res.ok) {
-      const ct = res.headers.get('Content-Type') || '';
-      if (ct.includes('audio')) {
+      const ct = res.headers.get('Content-Type') || res.headers.get('content-type') || '';
+      if (ct.includes('audio') || ct.includes('mpeg')) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         currentAudio = new Audio(url);
         currentAudio.onended = () => { URL.revokeObjectURL(url); done(); };
-        currentAudio.onerror = () => speakBrowser(text, code, done);
+        currentAudio.onerror = (e) => {
+          console.warn('Dashboard tutor audio playback error, falling back to browser:', e);
+          URL.revokeObjectURL(url);
+          speakBrowser(text, code, done);
+        };
         if (!narrationPaused && narrating) {
-          currentAudio.play().catch(() => speakBrowser(text, code, done));
+          try {
+            await currentAudio.play();
+            return;
+          } catch (e) {
+            console.warn('Dashboard tutor play failed, falling back to browser:', e);
+            URL.revokeObjectURL(url);
+            speakBrowser(text, code, done);
+            return;
+          }
         }
         return;
       }

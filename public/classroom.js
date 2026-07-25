@@ -515,24 +515,42 @@
     try {
       const res = await fetch('/api/tts', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, language: useLang, lessonTitle: lesson.title || '' }),
+        body: JSON.stringify({ text, language: useLang, lessonTitle: lesson?.title || '', role: 'teacher', section: 'classroom' }),
       });
       // someone hit Ask / Stop / a slide jump while this was downloading — drop it silently
       if (myEpoch !== speechEpoch) return;
-      if (res.ok && (res.headers.get('Content-Type') || '').includes('audio')) {
-        const url = URL.createObjectURL(await res.blob());
-        if (myEpoch !== speechEpoch) { URL.revokeObjectURL(url); return; }
+      const contentType = res.headers.get('Content-Type') || res.headers.get('content-type') || '';
+      if (res.ok && (contentType.includes('audio') || contentType.includes('mpeg'))) {
+        const blob = await res.blob();
+        if (myEpoch !== speechEpoch) return;
+        const url = URL.createObjectURL(blob);
         ensureAudioCtx();
         const a = new Audio(url);
-        a.playbackRate = rate; a.crossOrigin = 'anonymous';
-        try { const srcNode = audioCtx.createMediaElementSource(a); srcNode.connect(analyser); analyser.connect(audioCtx.destination); } catch (_) {}
+        a.playbackRate = rate;
+        try {
+          const srcNode = audioCtx.createMediaElementSource(a);
+          srcNode.connect(analyser);
+          analyser.connect(audioCtx.destination);
+        } catch (_) {}
         curAudio = a;
         a.onended = () => { URL.revokeObjectURL(url); if (myEpoch === speechEpoch) afterSpeak(done); };
-        a.onerror = () => { URL.revokeObjectURL(url); speakBrowser(text, done, useLang, myEpoch); };
-        await a.play().catch(() => speakBrowser(text, done, useLang, myEpoch));
-        return;
+        a.onerror = (e) => {
+          console.warn('Classroom audio playback error, falling back to browser:', e);
+          URL.revokeObjectURL(url);
+          speakBrowser(text, done, useLang, myEpoch);
+        };
+        try {
+          if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
+          await a.play();
+          return;
+        } catch (playErr) {
+          console.warn('Classroom audio play error, falling back to browser:', playErr);
+          URL.revokeObjectURL(url);
+          speakBrowser(text, done, useLang, myEpoch);
+          return;
+        }
       }
-    } catch (e) { /* fall through to browser voice */ }
+    } catch (e) { console.warn('Backend TTS fetch error in classroom:', e); }
     speakBrowser(text, done, useLang, myEpoch);
   }
 
