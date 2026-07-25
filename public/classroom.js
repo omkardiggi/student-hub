@@ -377,7 +377,7 @@
     speak(text, () => {
       pointer(false);
       if (playing && !paused) playSlide(i + 1);
-    }, line ? lang : notesLang);
+    }, lang);
   }
 
   function togglePlay() {
@@ -512,45 +512,44 @@
     const myEpoch = speechEpoch;              // claim this turn to speak
     teacher.setSpeaking && teacher.setSpeaking(true);
     startLip();
+    ensureAudioCtx();
     try {
       const res = await fetch('/api/tts', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, language: useLang, lessonTitle: lesson?.title || '', role: 'teacher', section: 'classroom' }),
+        body: JSON.stringify({ text, language: useLang, lessonTitle: lesson.title || '' }),
       });
       // someone hit Ask / Stop / a slide jump while this was downloading — drop it silently
       if (myEpoch !== speechEpoch) return;
-      const contentType = res.headers.get('Content-Type') || res.headers.get('content-type') || '';
-      if (res.ok && (contentType.includes('audio') || contentType.includes('mpeg'))) {
+      if (res.ok && (res.headers.get('Content-Type') || '').includes('audio')) {
         const blob = await res.blob();
         if (myEpoch !== speechEpoch) return;
         const url = URL.createObjectURL(blob);
         ensureAudioCtx();
         const a = new Audio(url);
-        a.playbackRate = rate;
-        try {
-          const srcNode = audioCtx.createMediaElementSource(a);
-          srcNode.connect(analyser);
-          analyser.connect(audioCtx.destination);
-        } catch (_) {}
+        a.playbackRate = rate; a.crossOrigin = 'anonymous';
+        try { const srcNode = audioCtx.createMediaElementSource(a); srcNode.connect(analyser); analyser.connect(audioCtx.destination); } catch (_) {}
         curAudio = a;
         a.onended = () => { URL.revokeObjectURL(url); if (myEpoch === speechEpoch) afterSpeak(done); };
-        a.onerror = (e) => {
-          console.warn('Classroom audio playback error, falling back to browser:', e);
-          URL.revokeObjectURL(url);
-          speakBrowser(text, done, useLang, myEpoch);
-        };
+        a.onerror = () => { URL.revokeObjectURL(url); if (myEpoch === speechEpoch) afterSpeak(done); };
+        
         try {
-          if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
           await a.play();
           return;
         } catch (playErr) {
-          console.warn('Classroom audio play error, falling back to browser:', playErr);
-          URL.revokeObjectURL(url);
-          speakBrowser(text, done, useLang, myEpoch);
-          return;
+          console.warn('[Cartesia] Audio play with WebAudio graph rejected, retrying direct play:', playErr.message);
+          try {
+            const aDirect = new Audio(url);
+            aDirect.playbackRate = rate;
+            curAudio = aDirect;
+            aDirect.onended = () => { URL.revokeObjectURL(url); if (myEpoch === speechEpoch) afterSpeak(done); };
+            await aDirect.play();
+            return;
+          } catch (dErr) {
+            console.warn('[Cartesia] Direct play also rejected:', dErr.message);
+          }
         }
       }
-    } catch (e) { console.warn('Backend TTS fetch error in classroom:', e); }
+    } catch (e) { console.warn('[Cartesia] Fetch error:', e.message); }
     speakBrowser(text, done, useLang, myEpoch);
   }
 
@@ -558,9 +557,16 @@
     if (myEpoch != null && myEpoch !== speechEpoch) return;
     if (!window.speechSynthesis) { afterSpeak(done); return; }
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = codeOf(useLang || lang);
+    const targetLang = useLang || lang || 'English';
+    u.lang = codeOf(targetLang);
     u.rate = rate;
-    const v = speechSynthesis.getVoices().find(x => x.lang === u.lang) || speechSynthesis.getVoices().find(x => x.lang.startsWith(u.lang.split('-')[0]));
+    const voices = (speechSynthesis.getVoices() || []);
+    const codePrefix = u.lang.split('-')[0].toLowerCase();
+    const langLower = String(targetLang).toLowerCase();
+    const v = voices.find(x => x.lang.toLowerCase() === u.lang.toLowerCase())
+      || voices.find(x => x.lang.toLowerCase().startsWith(codePrefix))
+      || voices.find(x => x.name.toLowerCase().includes(langLower))
+      || voices.find(x => codePrefix === 'hi' && (x.name.toLowerCase().includes('hindi') || x.name.toLowerCase().includes('india') || x.name.toLowerCase().includes('swara') || x.name.toLowerCase().includes('kalpana') || x.name.toLowerCase().includes('hemant')));
     if (v) u.voice = v;
     // synthetic visemes while the browser voice speaks (no audio stream to analyse)
     let osc = setInterval(() => { fakeMouth = 0.25 + Math.random() * 0.6; }, 90);

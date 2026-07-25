@@ -599,9 +599,9 @@ if (_learnBtn) _learnBtn.onclick = async () => {
     await loadClassroom();
     // Notes language = what the slides are written in. Teacher language = what she SPEAKS.
     // They're independent: English notes with a Kannada-speaking teacher is a valid combo.
-    const notesLang = currentLesson.language || $('language').value || 'English';
-    const picked = $('teacherLang') ? $('teacherLang').value : '';
-    window.OmkarClassroom.open(currentLesson, picked || notesLang, notesLang);
+    const selectedLang = ($('language') && $('language').value) || currentLesson.language || 'English';
+    const picked = ($('teacherLang') && $('teacherLang').value) || selectedLang;
+    window.OmkarClassroom.open(currentLesson, picked, selectedLang);
   } catch (e) {
     alert(e.message || 'Could not open the AI Teacher.');
   } finally {
@@ -640,41 +640,27 @@ async function speakLine(text, langLabel, done) {
     const res = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        language: langLabel,
-        lessonTitle: currentLesson?.title || '',
-        role: 'tutor',
-        section: 'dashboard'
-      }),
+      body: JSON.stringify({ text, language: langLabel, lessonTitle: currentLesson?.title || '' }),
     });
     if (res.ok) {
-      const ct = res.headers.get('Content-Type') || res.headers.get('content-type') || '';
-      if (ct.includes('audio') || ct.includes('mpeg')) {
+      const ct = res.headers.get('Content-Type') || '';
+      if (ct.includes('audio')) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         currentAudio = new Audio(url);
         currentAudio.onended = () => { URL.revokeObjectURL(url); done(); };
-        currentAudio.onerror = (e) => {
-          console.warn('Dashboard tutor audio playback error, falling back to browser:', e);
-          URL.revokeObjectURL(url);
-          speakBrowser(text, code, done);
-        };
+        currentAudio.onerror = () => { URL.revokeObjectURL(url); done(); };
         if (!narrationPaused && narrating) {
           try {
             await currentAudio.play();
             return;
-          } catch (e) {
-            console.warn('Dashboard tutor play failed, falling back to browser:', e);
-            URL.revokeObjectURL(url);
-            speakBrowser(text, code, done);
-            return;
+          } catch (pErr) {
+            console.warn('[Cartesia] Audio play error:', pErr.message);
           }
         }
-        return;
       }
     }
-  } catch (e) { console.warn('Backend TTS failed, falling back to browser:', e); }
+  } catch (e) { console.warn('Backend TTS failed:', e); }
   speakBrowser(text, code, done);
 }
 
@@ -1210,12 +1196,7 @@ async function speakInterviewQuestion(text, language) {
     const res = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        language: language || 'English',
-        role: 'interviewer',
-        section: 'interview'
-      }),
+      body: JSON.stringify({ text, language: language || 'English' }),
     });
     if (res.ok) {
       const blob = await res.blob();
