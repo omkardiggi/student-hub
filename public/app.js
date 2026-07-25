@@ -1192,7 +1192,12 @@ async function speakInterviewQuestion(text, language) {
     const res = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, language: language || 'English' }),
+      body: JSON.stringify({
+        text,
+        language: language || 'English',
+        role: 'interviewer',
+        section: 'interview'
+      }),
     });
     if (res.ok) {
       const blob = await res.blob();

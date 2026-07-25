@@ -630,7 +630,7 @@
         const ttsRes = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: replyText, language: 'English' }),
+          body: JSON.stringify({ text: replyText, language: 'English', role: 'opponent', section: 'debate' }),
         });
         if (ttsRes.ok) {
           const blob = await ttsRes.blob();

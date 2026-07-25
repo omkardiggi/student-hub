@@ -175,15 +175,6 @@ app.post('/api/ai-debate-reply', need, async (req, res) => {
   } catch (e) { fail(res, e); }
 });
 
-/* ───────── Optional neural TTS mp3 ───────── */
-app.post('/api/tts', need, async (req, res) => {
-  try {
-    const { text, language = 'English', lessonTitle = '' } = req.body;
-    const mp3 = await synthesize({ text, language, lessonTitle });
-    res.set('Content-Type', 'audio/mpeg').send(mp3);
-  } catch (e) { res.status(200).json({ skipped: true, reason: e.message }); }
-});
-
 /* ───────── My Doubts library ───────── */
 app.get('/api/doubts', need, (req, res) => res.json({ doubts: store.listDoubts(req.session.user.email) }));
 
@@ -293,12 +284,12 @@ app.post('/api/interview/evaluate', need, async (req, res) => {
 
 app.get('/api/speaking-history', need, (req, res) => res.json({ history: store.listSpeaking(req.session.user.email) }));
 
-/* ───────── TTS: neural voice audio (Cartesia / MsEdgeTTS) ───────── */
+/* ───────── TTS: neural voice audio (Fish Audio / Cartesia) ───────── */
 app.post('/api/tts', async (req, res) => {
   try {
-    const { text, language = 'English', lessonTitle = '' } = req.body;
+    const { text, language = 'English', lessonTitle = '', role = '', section = '', mode = '', caller = '' } = req.body;
     if (!text || !text.trim()) return res.status(400).json({ error: 'No text provided.' });
-    const buffer = await synthesize({ text, language, lessonTitle });
+    const buffer = await synthesize({ text, language, lessonTitle, role, section, mode, caller });
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'public, max-age=86400');

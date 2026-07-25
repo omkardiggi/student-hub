@@ -302,7 +302,7 @@
   function releaseTurn() { if (A && A.turnResolve) { const r = A.turnResolve; A.turnResolve = null; r(); } }
   function coordCue(text, sub) {
     setTurn('🧑‍⚖️ <b>Coordinator</b>', sub || text);
-    speak(text);   // fire-and-forget — do not await
+    speak(text, { role: 'coordinator', section: 'debate' });   // fire-and-forget — do not await
   }
   async function speak(text, opts) {
     const my = ++voiceSeq;                 // claim the channel; anything older is now stale
@@ -310,8 +310,15 @@
     if (A && A.coordAudio) { const p = A.coordAudio; A.coordAudio = null; try { p.pause(); if (p.onended) p.onended(); } catch (_) {} }
     try { if (window.speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel(); } catch (_) {}
     if (!text || (opts && opts.silent)) return;
+    const role = (opts && opts.role) ? opts.role : 'coordinator';
+    const section = (opts && opts.section) ? opts.section : 'debate';
+    const lang = (opts && opts.language) ? opts.language : (A?.language || 'English');
     try {
-      const r = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, language: 'English' }) });
+      const r = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, language: lang, role, section })
+      });
       if (my !== voiceSeq || !A) return;   // cancelled or torn down while fetching — don't play
       if (r.ok && (r.headers.get('Content-Type') || '').includes('audio')) {
         const url = URL.createObjectURL(await r.blob());
@@ -520,7 +527,7 @@
     A.history.push({ speaker: sp.name, text: reply, phase: ph.key });
     $('#dba-tile-' + sp.id, root)?.classList.remove('thinking');
     setTurn(`🤖 <b>${esc(sp.name)}</b> — ${ph.label}`, reply);
-    await speak(reply);        // the opponent's OWN voice reads its argument — we wait for it
+    await speak(reply, { role: 'opponent', section: 'debate' });        // the opponent's OWN voice reads its argument — we wait for it
     speakingTile(null);
   }
   const lastHumanText = () => { for (let i = A.history.length - 1; i >= 0; i--) if (A.history[i].speaker === A.me.name) return A.history[i].text; return ''; };
