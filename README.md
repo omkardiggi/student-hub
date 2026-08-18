@@ -1,4 +1,4 @@
-# Omkar Hub — turn any doubt into a lesson
+# student Hub — turn any doubt into a lesson
 
 Ask by **text, photo, or voice** → the AI writes a slide deck (title, flowchart, diagram,
 explanation) → an **AI tutor narrates it** slide-by-slide in **English / Hindi / Kannada**,
