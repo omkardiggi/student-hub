@@ -3,7 +3,7 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/webhook/(.*)", "destination": "/api/index.js" },
-    { "source": "/avatar/(.*)", "destination": "/avatar/$1" },
+    { "source": "/avatar/(.*)", "destination": "/public/avatar/$1" },
     { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }

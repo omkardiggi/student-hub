@@ -16,7 +16,7 @@
 (function () {
   'use strict';
 
-  const $ = (id) => document.getElementById(id);
+  const $ = (id) => (root ? root.querySelector('#' + id) : document.getElementById(id));
   const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
   const LANG = (typeof LANG_CODE !== 'undefined') ? LANG_CODE
     : { English: 'en-US', Hindi: 'hi-IN', Kannada: 'kn-IN', Hinglish: 'hi-IN', Kanglish: 'kn-IN', Auto: 'en-US' };
@@ -41,6 +41,7 @@
   let scriptPromise = null;
   let recog = null, recording = false;
   let opened = false;
+  let clockTimer = 0;            // live wall-clock updater
   /* Bumped every time speech is stopped or replaced. speak() captures it before awaiting
      the TTS fetch and checks it again after: if it changed while the audio was downloading,
      that clip is stale and must never play. Without this, tapping Ask silences the current
@@ -67,8 +68,10 @@
     if (typeof window.currentLesson === 'undefined' || !window.currentLesson) window.currentLesson = lesson;
 
     buildDom();
+    startClock();
     document.body.style.overflow = 'hidden';
     opened = true;
+    try { ensureAudioCtx(); } catch (_) {}
     requestAnimationFrame(() => root.classList.add('is-open'));
 
     // start writing the funny script straight away — it runs while the avatar loads
@@ -82,8 +85,25 @@
     setTimeout(() => greetAndStart(), 650);
   }
 
+  /* live wall clock — matches the photo; ticks in real time while the class is open */
+  function startClock() {
+    const H = $('clsClockH'), M = $('clsClockM'), S = $('clsClockS');
+    if (!H || !M || !S) return;
+    const tick = () => {
+      const d = new Date();
+      const s = d.getSeconds(), m = d.getMinutes(), h = d.getHours() % 12;
+      S.setAttribute('transform', `rotate(${s * 6} 50 50)`);
+      M.setAttribute('transform', `rotate(${m * 6 + s * 0.1} 50 50)`);
+      H.setAttribute('transform', `rotate(${h * 30 + m * 0.5} 50 50)`);
+    };
+    tick();
+    clearInterval(clockTimer);
+    clockTimer = setInterval(tick, 1000);
+  }
+
   function close() {
     stopSpeaking();
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = 0; }
     playing = false; paused = false;
     if (rafId) cancelAnimationFrame(rafId), rafId = 0;
     if (teacher && teacher.dispose) { try { teacher.dispose(); } catch (_) {} }
@@ -95,7 +115,12 @@
     document.body.style.overflow = '';
     window.removeEventListener('resize', onResize);
     document.removeEventListener('keydown', onKey);
-    if (root) { root.classList.remove('is-open'); const r = root; setTimeout(() => r.remove(), 400); root = null; }
+    if (root) {
+      root.classList.remove('is-open');
+      const r = root;
+      root = null;
+      setTimeout(() => { if (r && r.parentNode) r.remove(); }, 350);
+    }
     opened = false;
   }
 
@@ -103,6 +128,8 @@
 
   /* ═════════════════════════ DOM ═════════════════════════ */
   function buildDom() {
+    // Purge any existing or lingering classroom modals immediately to prevent duplicate IDs
+    document.querySelectorAll('.cls').forEach(m => m.remove());
     root = el('div', 'cls');
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-label', 'AI Teacher classroom');
@@ -115,26 +142,61 @@
         <button class="cls__x" id="clsX" title="Exit classroom (Esc)"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       </div>
 
-      <div class="cls__stage">
-        <div class="cls__boardwrap">
-          <div class="cls__board">
-            <div class="cls__slidearea" id="clsSlides"></div>
-            <div class="cls__chalk" id="clsChalk" hidden></div>
-            <div class="cls__pointer" id="clsPointer"><b></b></div>
-            <div class="cls__boardfoot">
-              <span id="clsCount">1 / ${slides.length}</span>
-              <div class="cls__rail" id="clsRail"></div>
-              <span id="clsSubject">${(lesson.subject || 'Lesson')}</span>
-            </div>
+      <div class="cls__stage" id="clsStage">
+        <!-- ── the rendered classroom, behind everything ── -->
+        <div class="cls__room" aria-hidden="true">
+          <div class="cls__wall"></div>
+          <div class="cls__lockers"></div>
+          <div class="cls__cork">
+            <span class="cls__note cls__note--a"></span>
+            <span class="cls__note cls__note--b"></span>
+            <span class="cls__note cls__note--c"></span>
+          </div>
+          <div class="cls__clock">
+            <svg viewBox="0 0 100 100">
+              <circle class="cls__clock-rim" cx="50" cy="50" r="47"/>
+              <circle class="cls__clock-face" cx="50" cy="50" r="43"/>
+              ${Array.from({ length: 12 }, (_, i) => {
+                const a = (i / 12) * Math.PI * 2, maj = i % 3 === 0;
+                const r0 = maj ? 33 : 37, r1 = 40;
+                const x1 = (50 + Math.sin(a) * r0).toFixed(1), y1 = (50 - Math.cos(a) * r0).toFixed(1);
+                const x2 = (50 + Math.sin(a) * r1).toFixed(1), y2 = (50 - Math.cos(a) * r1).toFixed(1);
+                return `<line class="cls__clock-tick${maj ? ' maj' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+              }).join('')}
+              <line class="cls__clock-h" id="clsClockH" x1="50" y1="52" x2="50" y2="30"/>
+              <line class="cls__clock-m" id="clsClockM" x1="50" y1="54" x2="50" y2="20"/>
+              <line class="cls__clock-s" id="clsClockS" x1="50" y1="58" x2="50" y2="17"/>
+              <circle class="cls__clock-cap" cx="50" cy="50" r="2.6"/>
+            </svg>
+          </div>
+          <div class="cls__floor"></div>
+        </div>
+
+        <!-- ── the 3D classroom mounts here (WebGL room + CSS3D board layer) ── -->
+        <div class="cls__scene3d" id="clsScene3D"></div>
+
+        <!-- ── green board mounted on the wall ── -->
+        <div class="cls__board" id="clsBoard">
+          <div class="cls__slidearea" id="clsSlides"></div>
+          <div class="cls__chalk" id="clsChalk" hidden></div>
+          <div class="cls__pointer" id="clsPointer"><b></b></div>
+          <div class="cls__boardfoot">
+            <span id="clsCount">1 / ${slides.length}</span>
+            <div class="cls__rail" id="clsRail"></div>
+            <span id="clsSubject">${(lesson.subject || 'Lesson')}</span>
           </div>
         </div>
 
-        <div class="cls__teachwrap">
-          <div class="cls__teacher" id="clsTeacher">
-            <div class="cls__tload" id="clsTLoad"><i></i><span>Bringing your teacher in…</span></div>
-          </div>
-          <div class="cls__caption" id="clsCap"><span class="txt">Take a seat — your teacher is getting ready…</span></div>
+        <!-- ── the teacher, standing in the room (transparent canvas) ── -->
+        <div class="cls__teacher" id="clsTeacher">
+          <div class="cls__tload" id="clsTLoad"><i></i><span>Bringing your teacher in…</span></div>
         </div>
+
+        <!-- ── wood counter across the foreground; hides the lower body ── -->
+        <div class="cls__counter" aria-hidden="true"></div>
+
+        <!-- ── what the teacher is saying ── -->
+        <div class="cls__caption" id="clsCap"><span class="txt">Take a seat — your teacher is getting ready…</span></div>
 
         <div class="cls__dock">
           <button class="cls__btn" id="clsNotes" title="Download notes"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -196,51 +258,114 @@
   }
   const isTyping = (e) => /input|textarea/i.test((e.target.tagName || ''));
 
-  function onResize() { if (teacher && teacher.resize) teacher.resize(); }
+  function onResize() {
+    if (teacher && teacher.resize) teacher.resize();
+    fitSlideToBoard();
+  }
 
-  /* ═════════════════════════ teacher mount ═════════════════════════ */
+  /* ═════════════════════════ teacher mount ═════════════════════════
+   * Mount the real 3D AI Teacher avatar over the classroom stage beside the green chalkboard.
+   * Falls back to the SVG professor if WebGL is unavailable or fails.
+   */
   async function upgradeTo3D() {
-    const host = $('clsTeacher');
     const badge = $('clsTLoad');
+    let mod = null;
     try {
-      const mod = await import('./teacher3d.js');
-      const t3d = await mod.createTeacher3D(host);
-      if (t3d && opened) {                        // still open? swap SVG → 3D
-        const old = teacher;
-        teacher = t3d;
-        // carry the live state over so the swap is seamless mid-sentence
-        teacher.setExpression && teacher.setExpression('smile');
-        teacher.setSpeaking && teacher.setSpeaking(!!(curAudio && !curAudio.paused) || !!fakeMouth);
-        teacher.resize && teacher.resize();
-        if (old && old.dispose) old.dispose();
-      } else if (t3d && t3d.dispose) {
-        t3d.dispose();                            // classroom already closed
-      }
+      mod = await import('./teacher3d.js?v=23');
     } catch (err) {
-      console.info('[Omkar Classroom] Using SVG teacher (3D unavailable):', err && err.message);
+      console.info('[Omkar Classroom] Using SVG teacher (module failed):', err && err.message);
+      if (badge) badge.remove();
+      return;
+    }
+
+    try {
+      const host = $('clsTeacher');
+      if (!host) return;
+      const t3d = await mod.createTeacher3D(host, { framing: 'bust' });
+      if (!opened) { t3d && t3d.dispose && t3d.dispose(); return; }
+      adoptTeacher(t3d);
+    } catch (err) {
+      console.info('[Omkar Classroom] Using SVG teacher fallback:', err && err.message);
     } finally {
       if (badge) badge.remove();
     }
   }
 
-  /* ═════════════════════════ slides ═════════════════════════ */
-  function renderSlide(i) {
-    // reuse the dashboard's slideHTML() so the board matches the deck exactly
-    if (typeof slideHTML === 'function') return `<div class="slide-canvas">${slideHTML(slides[i], i)}</div>`;
-    const s = slides[i] || {};
-    return `<div class="slide-canvas"><div class="slide-canvas__grid slide-canvas__grid--full"><div class="slide-canvas__main"><h3>${s.heading || ''}</h3></div></div></div>`;
+  /* Swap whatever teacher is on screen for a new one, carrying the live state across so the
+     switch is invisible even mid-sentence. */
+  function adoptTeacher(next) {
+    const old = teacher;
+    teacher = next;
+    teacher.setExpression && teacher.setExpression('smile');
+    teacher.setSpeaking && teacher.setSpeaking(!!(curAudio && !curAudio.paused) || !!fakeMouth);
+    teacher.resize && teacher.resize();
+    if (old && old.dispose) old.dispose();
   }
 
-  /* Swap the board to new content.
-   * Every .cls__slide is position:absolute/inset:0, so ANY leftover slide shows through
-   * and its text overlaps the new one. Retire EVERY existing slide (not just the first
-   * one querySelector happens to return) or fast slide changes stack them permanently. */
+  /* ═════════════════════════ slides ═════════════════════════ */
+  function renderSlide(i) {
+    let content = '';
+    if (typeof slideHTML === 'function') {
+      content = slideHTML(slides[i], i);
+    } else {
+      const s = slides[i] || {};
+      content = `<div class="slide-canvas__grid slide-canvas__grid--full"><div class="slide-canvas__main"><h3>${s.heading || ''}</h3></div></div>`;
+    }
+    return `<div class="cls__slide-fit"><div class="slide-canvas">${content}</div></div>`;
+  }
+
+  function fitSlideToBoard(slideEl) {
+    if (!slideEl) {
+      const area = $('clsSlides');
+      if (area) {
+        area.querySelectorAll('.cls__slide.in, .cls__slide:not(.out)').forEach(fitSlideToBoard);
+      }
+      return;
+    }
+    const fit = slideEl.querySelector('.cls__slide-fit');
+    if (!fit) return;
+
+    fit.style.width = '100%';
+
+    const area = $('clsSlides');
+    if (!area) return;
+    const availH = area.clientHeight - 8;
+    const availW = area.clientWidth - 12;
+    const contentH = fit.scrollHeight || fit.offsetHeight;
+    const contentW = fit.scrollWidth || fit.offsetWidth;
+
+    if (availH > 50 && availW > 50 && contentH > 0 && contentW > 0 && (contentH > availH || contentW > availW)) {
+      const scaleH = availH / Math.max(1, contentH);
+      const scaleW = availW / Math.max(1, contentW);
+      const scale = Math.min(1, Math.min(scaleH, scaleW)) * 0.98;
+      if (isFinite(scale) && scale > 0.1) {
+        fit.style.transform = `scale(${scale.toFixed(3)})`;
+        fit.style.transformOrigin = 'top center';
+      } else {
+        fit.style.transform = 'none';
+        fit.style.transformOrigin = 'top center';
+      }
+    } else {
+      fit.style.transform = 'none';
+      fit.style.transformOrigin = 'top center';
+    }
+  }
+
+  /* Swap the board to new content. */
   function swapSlide(html, instant) {
     const area = $('clsSlides');
+    if (!area) return null;
     const olds = Array.from(area.querySelectorAll('.cls__slide'));
     const next = el('div', 'cls__slide', html);
     area.appendChild(next);
-    requestAnimationFrame(() => next.classList.add('in'));
+    if (instant) {
+      next.classList.add('in');
+      fitSlideToBoard(next);
+    }
+    requestAnimationFrame(() => {
+      next.classList.add('in');
+      fitSlideToBoard(next);
+    });
     olds.forEach((o) => {
       o.classList.remove('in');
       o.classList.add('out');
@@ -254,9 +379,13 @@
     const next = swapSlide(renderSlide(idx), instant);
     $('clsCount').textContent = `${idx + 1} / ${slides.length}`;
     $('clsRail').querySelectorAll('.cls__pip').forEach((p, ix) => p.classList.toggle('active', ix === idx));
-    // points appear as she says them; the key formula gets written on the board
     setupReveal(next, sayFor(idx), playing && !paused);
     chalkWrite(findFormula(slides[idx]));
+    requestAnimationFrame(() => {
+      fitSlideToBoard(next);
+      setTimeout(() => fitSlideToBoard(next), 60);
+      setTimeout(() => fitSlideToBoard(next), 250);
+    });
   }
 
   /* ═════════════ progressive reveal — bullets land as the teacher speaks ═════════════
@@ -376,7 +505,13 @@
     // notes language — speak each with the voice that actually matches the text.
     speak(text, () => {
       pointer(false);
-      if (playing && !paused) playSlide(i + 1);
+      /* A real teacher takes a beat before moving on — it lets the point land and gives the
+         student a moment to read the board. Running the next line on immediately is the
+         single thing that most makes a narrated deck sound like a machine reading aloud. */
+      if (playing && !paused) {
+        teacher.lookAt && teacher.lookAt('student');
+        setTimeout(() => { if (playing && !paused) playSlide(i + 1); }, 900);
+      }
     }, lang);
   }
 
@@ -447,7 +582,9 @@
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 1024;          // enough resolution to tell vowel shapes apart
-      analyser.smoothingTimeConstant = 0.5;
+      // Lower = the analyser reacts faster to the audio. 0.5 lagged the voice noticeably;
+      // 0.3 tracks each syllable while still filtering out sample-level jitter.
+      analyser.smoothingTimeConstant = 0.3;
       lipBuf = new Uint8Array(analyser.fftSize);
       freqBuf = new Uint8Array(analyser.frequencyBinCount);
     }
@@ -466,11 +603,24 @@
     rafId = requestAnimationFrame(lipLoop);
     let open = 0, round = 0, wide = 0;
 
-    if (analyser && curAudio && !curAudio.paused) {
+    const isAudioPlaying = !!(curAudio && !curAudio.paused);
+    const isSpeechSpeaking = !!(window.speechSynthesis && speechSynthesis.speaking && !speechSynthesis.paused);
+    const isTeacherSpeaking = isAudioPlaying || isSpeechSpeaking || !!fakeMouth;
+
+    if (analyser && isAudioPlaying) {
       analyser.getByteTimeDomainData(lipBuf);
       let sum = 0;
       for (let k = 0; k < lipBuf.length; k++) { const v = (lipBuf[k] - 128) / 128; sum += v * v; }
-      open = Math.min(1, Math.sqrt(sum / lipBuf.length) * 3.6);
+      const rms = Math.sqrt(sum / lipBuf.length);
+      
+      if (rms > 0.018) {
+        // Active speech energy: snappy responsive jaw opening
+        const normalized = Math.min(1, (rms - 0.018) * 6.8);
+        open = Math.pow(normalized, 0.72);
+      } else {
+        // Natural pause or silence between words: allow mouth to rest closed
+        open = 0;
+      }
 
       analyser.getByteFrequencyData(freqBuf);
       const binHz = (audioCtx.sampleRate || 48000) / analyser.fftSize;
@@ -481,18 +631,22 @@
         for (let i = a; i <= b; i++) { s += freqBuf[i]; n++; }
         return n ? (s / n) / 255 : 0;
       };
-      const lo = band(100, 600), mid = band(600, 2200), hi = band(2200, 6000);
+      const lo = band(100, 700), mid = band(700, 2400), hi = band(2400, 6500);
       const tot = lo + mid + hi + 1e-6;
-      round = Math.min(1, (lo / tot) * 1.55);
+      round = Math.min(1, (lo / tot) * 1.6);
       wide = Math.min(1, ((mid + hi) / tot) * 1.35);
-    } else if (fakeMouth) {
-      // browser-voice fallback: no audio graph to analyse, so approximate
-      open = fakeMouth; round = 0.35; wide = 0.35;
+    } else if (isTeacherSpeaking) {
+      // Audio or SpeechSynthesis is actively talking: provide continuous lively visemes
+      const tNow = performance.now() * 0.001;
+      const base = fakeMouth || Math.max(0, Math.sin(tNow * 11.5) * 0.44 + Math.sin(tNow * 18.0) * 0.28 + 0.32);
+      open = Math.min(1, base);
+      round = Math.max(0, Math.sin(tNow * 7.5)) * 0.40;
+      wide = Math.max(0, Math.cos(tNow * 8.6)) * 0.40;
     }
 
-    vOpen += (open - vOpen) * (open > vOpen ? 0.55 : 0.20);   // fast attack, slow release
-    vRound += (round - vRound) * 0.22;
-    vWide += (wide - vWide) * 0.22;
+    vOpen += (open - vOpen) * (open > vOpen ? 0.80 : 0.42);   // instant snappy attack, smooth release
+    vRound += (round - vRound) * 0.32;
+    vWide += (wide - vWide) * 0.32;
 
     if (teacher) {
       if (teacher.setViseme) teacher.setViseme({ open: vOpen, round: vRound, wide: vWide });

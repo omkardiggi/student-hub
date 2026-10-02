@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=11">
 <link rel="stylesheet" href="app.css?v=11">
-<link rel="stylesheet" href="classroom.css?v=11">
+<link rel="stylesheet" href="classroom.css?v=23">
 <link rel="stylesheet" href="debate-arena.css?v=11">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -173,6 +173,9 @@
           <div class="lesson__deckhead">
             <span class="lesson__subject" id="lessonSubject">Lesson</span>
             <div class="lesson__acts">
+              <button class="lesson__dl lesson__dl--hero" id="learnWithTeacher" type="button">
+                <span>🎓 Learn with AI Teacher</span>
+              </button>
               <button class="lesson__dl" id="practiceThis">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/></svg>
                 Practice this
@@ -193,16 +196,33 @@
         </div>
 
         <aside class="tutor">
-          <div class="tutor__cap" id="tutorCap">Press play for a quick answer — or learn it live with your AI Teacher.</div>
-          <button class="tutor__play" id="tutorPlay"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></button>
-          <div class="lesson__choice">
-            <button class="learnbtn" id="learnWithTeacher" type="button">
-              <span class="emo">🎓</span>
-              <span>Learn with AI Teacher</span>
-              <span class="spark"></span>
-            </button>
-            <span class="hint">Opens a live classroom — the teacher walks you through every slide.</span>
+          <div class="tutor__head">
+            <span class="tutor__badge"><i></i> AI Teacher Live</span>
           </div>
+          <!-- 3D AI Teacher avatar: half section up to stomach -->
+          <div class="tutor__avatar" id="tutorAvatar">
+            <div class="tutor__tload" id="tutorLoad"><i></i><span>Bringing AI Teacher in…</span></div>
+          </div>
+
+          <!-- Main Start Teaching Button -->
+          <button class="tutor__startbtn" id="tutorStartBtn" type="button">
+            <span>🎓 Ready to Teach — Start Class</span>
+          </button>
+
+          <!-- Live Caption -->
+          <div class="tutor__cap" id="tutorCap">Click "Ready to Teach" to start the live explanation.</div>
+
+          <!-- Interactive Controls: Play/Pause & Live Voice Doubt -->
+          <div class="tutor__ctrls">
+            <button class="tutor__play" id="tutorPlay" title="Play / Pause narration">
+              <svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button class="tutor__mic" id="tutorMicBtn" type="button" title="Ask a doubt by speaking">
+              <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="#fff" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span>Ask Doubt</span>
+            </button>
+          </div>
+          <div class="tutor__status" id="tutorStatus">Ready to teach</div>
         </aside>
       </div>
     </section>
@@ -587,7 +607,7 @@
   </main>
 </div>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=23"></script>
 <script src="debate.js?v=11"></script>
 <script src="debate-arena.js?v=11"></script>
 </body>

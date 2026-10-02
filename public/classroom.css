@@ -66,22 +66,37 @@
 .cls__x:hover { background: rgba(255,255,255,0.14); transform: rotate(90deg); }
 .cls__x svg { width: 20px; height: 20px; }
 
-/* ───────── Stage (the room) ───────── */
+/* ───────── Stage (clean dark backdrop, greenboard left, teacher right) ───────── */
+/* ───────── Stage (clean dark backdrop, greenboard left, teacher right in 50/50 split) ───────── */
 .cls__stage {
   position: relative; z-index: 4;
   flex: 1; min-height: 0;
-  display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  gap: 26px;
-  padding: 8px 30px 4px;
-  align-items: stretch;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 24px !important;
+  align-items: stretch !important;
+  padding: 14px 28px 84px 28px;
+  overflow: hidden;
 }
 
-/* Green board with slides */
-.cls__boardwrap { position: relative; display: flex; flex-direction: column; min-height: 0; }
+/* Hide background 2D classroom props (wall, lockers, clock, corkboard, counter) */
+.cls__room,
+.cls__counter {
+  display: none !important;
+}
+
+/* ── green board mounted on the wall (EQUAL 50/50 SCREEN RATIO WITH TEACHER) ── */
 .cls__board {
-  position: relative;
-  flex: 1; min-height: 0;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  z-index: 3 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
   border-radius: 18px;
   background:
     radial-gradient(120% 130% at 30% 10%, #2f5b46 0%, #22503b 42%, #163a2a 100%);
@@ -90,49 +105,256 @@
   box-shadow:
     inset 0 0 90px rgba(0,0,0,0.45),
     inset 0 2px 0 rgba(255,255,255,0.05),
-    0 40px 90px rgba(0,0,0,0.5);
-  overflow: hidden;
+    -10px 20px 40px rgba(0,0,0,0.4),
+    0 30px 70px rgba(0,0,0,0.5);
+  overflow: hidden !important;
+  box-sizing: border-box !important;
   display: flex; flex-direction: column;
 }
 .cls__board::after {  /* chalk dust sheen */
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(700px 300px at 70% 0%, rgba(255,255,255,0.06), transparent 60%);
 }
-.cls__slidearea { position: relative; flex: 1; min-height: 0; overflow: hidden; }
-.cls__slide {
-  position: absolute; inset: 0;
-  padding: 26px 30px;
-  overflow: auto;
-  opacity: 0; transform: translateY(14px) scale(.99);
-  transition: opacity .5s var(--ease), transform .5s var(--ease);
+.cls__board *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
-.cls__slide.in { opacity: 1; transform: none; }
-.cls__slide.out { opacity: 0; transform: translateY(-12px) scale(.99); }
+.cls__board,
+.cls__board * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
 
-/* Recolour the reused .slide-canvas markup to read as green-board chalk */
-.cls__board .slide-canvas { background: transparent; box-shadow: none; padding: 0; color: #eafff2; }
-.cls__board .slide-canvas h2,
-.cls__board .slide-canvas h3 { color: #ffffff; }
-.cls__board .slide-title { color: #fff; }
-.cls__board .kicker { color: #ffe6b8; background: rgba(255,230,184,0.12); border-color: rgba(255,230,184,0.3); }
-.cls__board .slide-sub,
-.cls__board .expx__pt p,
-.cls__board .diax-cycle__text span,
-.cls__board .diax-compare__body p { color: rgba(234,255,242,0.82); }
-.cls__board .expx__pt b,
-.cls__board .diax-cycle__text b,
-.cls__board .diax-compare__head b,
-.cls__board .flowx__node { color: #fff; }
-.cls__board .flowx__node { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.18); }
-.cls__board .flowx__arr { color: #ffe6b8; }
-.cls__board .expx__pt .n,
-.cls__board .diax-cycle__badge { background: var(--amber); color: #241300; }
-.cls__board .slide-canvas__img { border-radius: 12px; filter: saturate(1.05) contrast(1.02); }
+.cls__slidearea {
+  position: relative !important; z-index: 5 !important; flex: 1 !important; min-height: 0 !important; overflow: hidden !important;
+  display: flex !important; align-items: stretch !important; justify-content: stretch !important;
+}
+.cls__slide {
+  position: absolute !important; inset: 0 !important;
+  padding: 16px 20px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box !important;
+  opacity: 0; transform: translateY(10px) scale(.99);
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+  pointer-events: none !important;
+}
+.cls__slide.in { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+.cls__slide.out { opacity: 0 !important; transform: translateY(-10px) scale(.99) !important; pointer-events: none !important; }
+
+/* Auto-scaler wrapper ensures 100% visibility without any scrolling */
+.cls__slide-fit {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  transform-origin: top center;
+  transition: transform .2s ease;
+}
+
+/* Clear outer canvas styles so there is NO nested chalkboard border */
+.cls__board .slide-canvas {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  color: #eafff2;
+}
+.cls__board .slide-canvas::before {
+  display: none !important;
+}
+.cls__board .slide-canvas__grid,
+.cls__board .slide-canvas__grid--full {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: auto !important;
+}
+.cls__board .slide-canvas__main {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+/* High-visibility, crisp chalk typography */
+.cls__board .slide-canvas h2 {
+  font-family: "Caveat", "Patrick Hand", cursive;
+  font-size: clamp(26px, 3.4vw, 36px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+  margin: 2px 0 6px 0;
+  text-shadow: 0 0 10px rgba(255,255,255,0.4);
+}
+.cls__board .slide-canvas h3 {
+  font-family: "Caveat", "Patrick Hand", cursive;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+  margin: 2px 0 6px 0;
+  text-shadow: 0 0 10px rgba(255,255,255,0.4);
+}
+.cls__board .slide-title {
+  color: #fff;
+  font-family: "Caveat", "Patrick Hand", cursive;
+  font-weight: 700;
+}
+.cls__board .kicker {
+  color: #ffe6b8; background: rgba(255,230,184,0.16); border: 1px solid rgba(255,230,184,0.4);
+  font-size: 13px; font-weight: 700; letter-spacing: 0.12em;
+  padding: 3px 12px; border-radius: 999px; display: inline-flex; align-self: flex-start;
+}
+.cls__board .slide-sub {
+  color: #f0fff6;
+  font-family: "Patrick Hand", cursive, sans-serif;
+  font-size: clamp(17px, 1.8vw, 22px);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* Chalkboard cycle / process items */
+.cls__board .diax-cycle {
+  display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; margin-top: 4px !important;
+}
+.cls__board .diax-cycle__center {
+  display: inline-flex !important; align-self: flex-start !important;
+  padding: 4px 14px !important; border-radius: 999px !important;
+  background: rgba(255,255,255,0.12) !important;
+  border: 1.5px solid rgba(255,230,184,0.45) !important;
+  color: #ffe6b8 !important;
+  font-family: 'Patrick Hand', 'Caveat', cursive, sans-serif !important;
+  font-size: 16px !important; font-weight: 700 !important;
+  box-shadow: none !important;
+}
+.cls__board .diax-cycle__nodes {
+  display: flex !important; flex-direction: column !important; gap: 7px !important; width: 100% !important;
+}
+.cls__board .diax-cycle__node {
+  display: flex !important; gap: 12px !important; align-items: center !important;
+  background: rgba(0, 0, 0, 0.32) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+}
+.cls__board .diax-cycle__badge {
+  width: 28px !important; height: 28px !important; border-radius: 50% !important;
+  background: #ffb347 !important; color: #1a0e00 !important;
+  font-family: 'Caveat', cursive !important; font-size: 18px !important; font-weight: 700 !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.cls__board .diax-cycle__text {
+  display: flex !important; flex-direction: column !important; gap: 1px !important; min-width: 0 !important;
+}
+.cls__board .diax-cycle__text b {
+  color: #ffffff !important;
+  font-family: 'Caveat', cursive !important;
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  text-shadow: 0 0 6px rgba(255,255,255,0.3) !important;
+}
+.cls__board .diax-cycle__text span {
+  color: #f0fff6 !important;
+  font-family: 'Patrick Hand', cursive, sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.35 !important;
+  opacity: 0.96 !important;
+}
+
+/* Chalkboard explanations */
+.cls__board .expx { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
+.cls__board .expx__pt {
+  display: flex !important; gap: 12px !important; align-items: flex-start !important;
+  padding: 8px 14px !important; border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+.cls__board .expx__pt .n {
+  width: 28px !important; height: 28px !important; border-radius: 50% !important;
+  background: #ffb347 !important; color: #1a0e00 !important;
+  font-family: 'Caveat', cursive !important; font-size: 18px !important; font-weight: 700 !important;
+  display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
+}
+.cls__board .expx__pt b {
+  display: block !important; color: #ffffff !important;
+  font-family: 'Caveat', cursive !important; font-size: 21px !important; margin-bottom: 2px !important;
+  text-shadow: 0 0 6px rgba(255,255,255,0.3) !important;
+}
+.cls__board .expx__pt p {
+  color: #f0fff6 !important;
+  font-family: 'Patrick Hand', cursive, sans-serif !important;
+  font-size: 16px !important; line-height: 1.35 !important; margin: 0 !important;
+  opacity: 0.96 !important;
+}
+
+/* Schematics */
+.cls__board .diax-schematic { gap: 8px !important; width: 100% !important; margin-top: 4px !important; }
+.cls__board .diax-schematic__graphic { padding: 8px !important; border-radius: 14px !important; }
+.cls__board .diax-schematic__hub { padding: 4px 14px !important; border-radius: 999px !important; }
+.cls__board .diax-schematic__title { font-size: 20px !important; color: #ffe6b8 !important; }
+.cls__board .diax-schematic__parts { display: flex !important; flex-direction: column !important; gap: 7px !important; width: 100% !important; }
+.cls__board .diax-schematic__card {
+  padding: 8px 12px !important; border-radius: 12px !important; background: rgba(0,0,0,0.3) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+.cls__board .diax-schematic__pin {
+  width: 26px !important; height: 26px !important; font-size: 17px !important;
+  background: #ffb347 !important; color: #1a0e00 !important; border: 0 !important;
+}
+.cls__board .diax-schematic__content b {
+  font-size: 20px !important; color: #ffffff !important;
+  font-family: 'Caveat', cursive !important;
+}
+.cls__board .diax-schematic__content span {
+  font-size: 16px !important; color: #f0fff6 !important;
+  font-family: 'Patrick Hand', cursive, sans-serif !important;
+  opacity: 0.96 !important;
+}
+
+/* Compare */
+.cls__board .diax-compare { gap: 10px !important; width: 100% !important; }
+.cls__board .diax-compare__col {
+  padding: 10px 14px !important; border-radius: 12px !important;
+  background: rgba(0,0,0,0.3) !important; border: 1px solid rgba(255,255,255,0.2) !important;
+}
+.cls__board .diax-compare__head b {
+  font-family: 'Caveat', cursive !important; font-size: 21px !important; color: #ffffff !important;
+}
+.cls__board .diax-compare__body p {
+  font-family: 'Patrick Hand', cursive !important; font-size: 16px !important; color: #f0fff6 !important;
+}
+
+/* Flowchart */
+.cls__board .flowx { gap: 7px !important; width: 100% !important; }
+.cls__board .flowx__node {
+  background: rgba(0,0,0,0.32) !important; border: 1px solid rgba(255,255,255,0.22) !important;
+  border-radius: 10px !important; padding: 8px 14px !important; font-size: 16px !important; color: #ffffff !important;
+  font-family: 'Patrick Hand', cursive !important;
+}
+
+.cls__board .slide-canvas__img { border-radius: 12px; filter: saturate(1.05) contrast(1.02); max-height: 240px; object-fit: contain; }
 .cls__board .slide-canvas__imgwrap { box-shadow: 0 12px 34px rgba(0,0,0,.4); border-radius: 12px; }
 
 /* pointer beam the teacher casts on the board when pointing */
 .cls__pointer {
-  position: absolute; z-index: 5; top: 40%; left: -8%;
+  position: absolute; z-index: 5; top: 40%; right: -8%;
   width: 0; height: 0; opacity: 0; pointer-events: none;
   transition: opacity .3s;
 }
@@ -155,19 +377,47 @@
 .cls__pip { width: 22px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.22); cursor: pointer; transition: background .25s, width .25s; border: 0; padding: 0; }
 .cls__pip.active { background: var(--amber); width: 30px; }
 
-/* ───────── Teacher column ───────── */
-.cls__teachwrap { position: relative; display: flex; flex-direction: column; min-height: 0; }
+/* ───────── Teacher — stands on the RIGHT side (50/50 split) ───────── */
 .cls__teacher {
-  position: relative; flex: 1; min-height: 0;
-  border-radius: 18px; overflow: hidden;
-  background:
-    linear-gradient(180deg, #1a1a24 0%, #14141c 60%, #0f0f16 100%);
-  box-shadow: inset 0 0 80px rgba(0,0,0,0.4), 0 30px 70px rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.06);
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 30%, rgba(91,79,240,0.20), rgba(12,12,22,0.95));
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }
-.cls__teacher canvas { display: block; width: 100% !important; height: 100% !important; position: relative; z-index: 2; }
+.cls__teacher canvas {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 2 !important;
+  transform: none !important;
+}
+.svg-teacher {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
 
-/* "loading the 3D teacher" badge — shown over the SVG stand-in until the avatar arrives */
+/* "loading the 3D teacher" badge */
 .cls__tload {
   position: absolute; z-index: 6; left: 50%; bottom: 14px; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
@@ -182,60 +432,65 @@
   animation: cls-spin .8s linear infinite;
 }
 @keyframes cls-spin { to { transform: rotate(360deg); } }
-/* subtle classroom floor + spotlight behind the teacher */
+/* soft warm key-light behind the teacher's head */
 .cls__teacher::before {
-  content: ""; position: absolute; inset: 0;
-  background:
-    radial-gradient(420px 300px at 50% 22%, rgba(91,79,240,0.22), transparent 62%),
-    linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.5) 100%);
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(44% 38% at 50% 32%, rgba(255,246,228,.30), transparent 72%);
   pointer-events: none;
 }
 
-/* Captions */
+/* Captions — live speech bubble anchored on the right side under the teacher */
 .cls__caption {
-  position: relative; z-index: 5;
-  margin-top: 12px;
-  min-height: 62px;
-  padding: 14px 18px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
-  font-size: 15.5px; line-height: 1.55; color: #f3f3f8;
-  display: flex; align-items: center;
+  position: absolute; z-index: 6;
+  right: 28px; left: auto; bottom: 18px; transform: none;
+  max-width: min(540px, calc(100% - 460px)); min-height: 52px; max-height: 140px;
+  overflow-y: auto;
+  padding: 10px 18px; border-radius: 16px;
+  background: rgba(15,14,24,.92);
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(14px);
+  font-size: 14.5px; line-height: 1.45; color: #fdf6ee;
+  display: flex; align-items: flex-start;
+  box-shadow: 0 16px 40px rgba(0,0,0,.5);
 }
-.cls__caption b { color: var(--amber); font-weight: 700; margin-right: 8px; white-space: nowrap; }
-.cls__caption .txt { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+.cls__caption b { color: var(--amber); font-weight: 700; margin-right: 8px; white-space: nowrap; font-size: 16px; line-height: 1.4; }
+.cls__caption .txt {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  display: block; overflow: visible; word-break: break-word;
+}
 
-/* ───────── Controls ───────── */
+/* ───────── Floating Bottom Controls Dock (MOVED TO THE SIDE) ───────── */
 .cls__controls {
-  position: relative; z-index: 6;
-  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-  padding: 16px 24px 20px;
-  background: linear-gradient(0deg, rgba(9,9,15,0.75), transparent);
+  position: absolute; z-index: 10;
+  bottom: 20px; left: 28px; transform: none;
+  display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(12,12,22,0.92); border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.65);
 }
 .cls__btn {
-  height: 46px; min-width: 46px; padding: 0 14px;
-  border-radius: 13px; border: 1px solid rgba(255,255,255,0.14);
+  height: 44px; min-width: 44px; padding: 0 14px;
+  border-radius: 12px; border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.06); color: #fff; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 13.5px; font-weight: 600; font-family: inherit;
   transition: background .2s, transform .12s, border-color .2s;
 }
-.cls__btn:hover { background: rgba(255,255,255,0.13); }
+.cls__btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.3); }
 .cls__btn:active { transform: translateY(1px) scale(.98); }
 .cls__btn svg { width: 20px; height: 20px; }
 .cls__btn[disabled] { opacity: .4; cursor: not-allowed; }
 .cls__btn--play {
-  height: 58px; min-width: 58px; border-radius: 50%;
+  height: 54px; min-width: 54px; border-radius: 50%;
   background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
-  border: 0; box-shadow: 0 12px 30px rgba(91,79,240,0.5);
+  border: 0; box-shadow: 0 10px 26px rgba(91,79,240,0.55);
 }
-.cls__btn--play:hover { filter: brightness(1.08); background: linear-gradient(135deg, var(--indigo), var(--indigo-deep)); }
-.cls__btn--play svg { width: 26px; height: 26px; }
+.cls__btn--play:hover { transform: scale(1.06); background: linear-gradient(135deg, var(--indigo), var(--indigo-deep)); }
+.cls__btn--play svg { width: 24px; height: 24px; }
 .cls__btn--mic.rec { background: #e5484d; border-color: #e5484d; animation: cls-live 1.4s infinite; }
 .cls__speed { font-variant-numeric: tabular-nums; }
-.cls__sep { width: 1px; height: 30px; background: rgba(255,255,255,0.14); margin: 0 4px; }
+.cls__sep { width: 1px; height: 26px; background: rgba(255,255,255,0.16); margin: 0 2px; }
 
 /* ───────── Side dock (post-lesson tools) ───────── */
 .cls__dock {
@@ -309,9 +564,15 @@
 
 /* ───────── Responsive ───────── */
 @media (max-width: 940px) {
-  .cls__stage { grid-template-columns: 1fr; grid-template-rows: 1.2fr .8fr; padding: 6px 16px; gap: 14px; }
-  .cls__caption { display: none; }
-  .cls__dock { position: static; transform: none; flex-direction: row; justify-content: center; margin: 6px 0; }
+  /* stack the scene: board on the wall up top, teacher below-left in the room */
+  .cls__stage { margin: 4px 8px 2px; }
+  .cls__lockers, .cls__cork { display: none; }
+  .cls__board { top: 5%; left: 5%; right: auto; width: 90%; height: 40%; }
+  .cls__teacher { left: 0; width: 72%; height: 60%; }
+  .cls__clock { top: 3%; left: auto; right: 6%; width: 12%; }
+  .cls__counter { height: 13%; }
+  .cls__caption { width: 88%; bottom: calc(13% + 8px); font-size: 13.5px; }
+  .cls__dock { top: auto; bottom: calc(13% + 8px); right: 8px; transform: none; }
   .cls__controls { gap: 8px; padding: 12px 14px 16px; }
   .cls__btn span:not(.cls__speed) { display: none; }
 }
@@ -359,3 +620,329 @@
 
 /* keep slide text clear of the chalk strip at the foot of the board */
 .cls__slidearea.has-chalk .cls__slide { padding-bottom: 116px; }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   VISUAL POLISH PASS
+   The room reads flat because every surface is lit evenly and nothing casts a
+   shadow onto anything else. These layers add depth cues only — no geometry
+   changes, so nothing here can shift the board or the teacher out of place.
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Room depth: corner shading + a lens vignette over the whole scene ──
+   A real room is darker in the corners and where the wall meets the floor. */
+.cls__room::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background:
+    /* darken the left and right extremes so the room has corners */
+    linear-gradient(90deg, rgba(24,10,4,.42) 0%, transparent 18%, transparent 82%, rgba(24,10,4,.34) 100%),
+    /* ceiling shade + a warm pool of light where the teacher stands */
+    linear-gradient(180deg, rgba(24,10,4,.30) 0%, transparent 22%),
+    radial-gradient(70% 55% at 26% 78%, rgba(255,238,208,.12), transparent 70%);
+}
+/* soft vignette on the stage itself — reads as a camera framing the room.
+   z-index 5 keeps it above the room/board/counter but BELOW the caption (6) and the
+   side dock (7), so it never dims the controls the student actually clicks. */
+.cls__stage::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  border-radius: 20px;
+  background: radial-gradient(120% 105% at 50% 45%, transparent 55%, rgba(6,3,1,.40) 100%);
+}
+
+/* ── 2. Where the wall meets the floor ── a contact shadow, not a hard seam */
+.cls__floor::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 34%;
+  background: linear-gradient(180deg, rgba(20,8,2,.46), transparent);
+  pointer-events: none;
+}
+
+/* ── 3. Ground the teacher ── without a shadow she looks pasted onto the wall */
+.cls__teacher::after {
+  content: ""; position: absolute; z-index: 0; pointer-events: none;
+  left: 12%; right: 12%; bottom: 2%; height: 7%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(20,8,2,.50), transparent 72%);
+  filter: blur(6px);
+}
+
+/* ── 4. The board: deeper frame, and a shadow it casts on the wall ── */
+.cls__board {
+  box-shadow:
+    inset 0 0 90px rgba(0,0,0,0.45),
+    inset 0 2px 0 rgba(255,255,255,0.05),
+    /* the frame lifts off the wall and drops a soft shadow down-left */
+    -14px 26px 50px rgba(28,12,4,.44),
+    0 40px 90px rgba(0,0,0,0.5);
+}
+/* chalk ghosting — decades of half-erased writing, kept very faint */
+.cls__board::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: .5;
+  background:
+    radial-gradient(38% 22% at 22% 32%, rgba(255,255,255,.055), transparent 70%),
+    radial-gradient(30% 18% at 76% 62%, rgba(255,255,255,.045), transparent 70%);
+}
+/* keep slides above the ghosting */
+.cls__slidearea, .cls__boardfoot { position: relative; z-index: 1; }
+
+/* ── 5. Chalk tray under the board, with sticks of chalk (as in a real class) ── */
+.cls__board::after {
+  background:
+    radial-gradient(700px 300px at 70% 0%, rgba(255,255,255,0.06), transparent 60%),
+    /* the tray itself */
+    linear-gradient(180deg, transparent calc(100% - 9px), #6b4a2f calc(100% - 9px));
+}
+
+/* ── 6. Counter: warmer wood, a top highlight, and shadow onto the floor ── */
+.cls__counter {
+  background:
+    /* subtle vertical wood grain */
+    repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 3px, transparent 3px 9px),
+    linear-gradient(180deg, #c2915c 0%, #9f7342 14%, #7f5930 100%);
+  box-shadow:
+    0 -18px 40px rgba(0,0,0,.40),
+    inset 0 3px 0 rgba(255,255,255,.20),
+    inset 0 -14px 26px rgba(0,0,0,.26);
+}
+
+/* ── 7. Captions: cleaner, warmer, easier to read at a glance ── */
+.cls__caption {
+  background: linear-gradient(180deg, rgba(28,18,11,.72), rgba(16,10,6,.66));
+  border-color: rgba(255,226,186,.20);
+  box-shadow: 0 20px 50px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.09);
+  letter-spacing: .002em;
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+}
+
+/* ── 8. Slide transitions: smooth lift & instant focus ── */
+.cls__slide.in { opacity: 1 !important; transform: none !important; }
+.cls__slide.out { opacity: 0 !important; transform: translateY(-8px) scale(.995) !important; }
+
+/* ── 9. Live-lesson chip + pips: a touch more presence ── */
+.cls__pip.active { box-shadow: 0 0 10px rgba(245,147,59,.65); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cls__caption { transition: none; }
+}
+/* the stacked mobile layout has no room for the extra depth layers */
+@media (max-width: 940px) {
+  .cls__teacher::after { display: none; }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   CLASSROOM PROPORTIONS — Square Board, No Scrolling, Side Controls
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* The board and teacher share the stage in the exact same 50/50 screen ratio */
+.cls__board {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  border-width: 12px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  top: auto !important; right: auto !important; left: auto !important; bottom: auto !important;
+}
+
+.cls__teacher {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  border-radius: 18px !important;
+  background: radial-gradient(circle at 50% 38%, rgba(91, 79, 240, 0.22) 0%, rgba(20, 15, 38, 0.6) 55%, rgba(12, 10, 24, 0.95) 100%) !important;
+  top: auto !important; right: auto !important; left: auto !important; bottom: auto !important;
+}
+
+/* Zero scrolling inside the board slides */
+.cls__slide {
+  overflow: hidden !important;
+  padding: 16px 20px !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.cls__slide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Controls docked on the side under the board to eliminate overlap with the teacher script */
+.cls__controls {
+  position: absolute !important;
+  z-index: 10 !important;
+  bottom: 20px !important;
+  left: 28px !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* Teacher script anchored under the teacher avatar on the right side — FULL SCRIPT VISIBLE */
+.cls__caption {
+  position: absolute !important;
+  z-index: 6 !important;
+  right: 28px !important;
+  left: auto !important;
+  bottom: 18px !important;
+  transform: none !important;
+  max-width: min(540px, calc(100% - 460px)) !important;
+  max-height: 140px !important;
+  overflow-y: auto !important;
+  width: auto !important;
+  align-items: flex-start !important;
+}
+.cls__caption .txt {
+  display: block !important;
+  overflow: visible !important;
+  word-break: break-word !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   THE REAL 3D CLASSROOM  (.cls--3d)
+   The room, the teacher and the lighting are all one WebGL scene now. The board is
+   still real HTML — it lives in a CSS3D layer BEHIND the transparent WebGL canvas and
+   shows through a board-shaped hole in the back wall, which is what lets the teacher's
+   arm pass correctly in front of it while the slide text stays perfectly crisp.
+   This whole block only applies once the 3D scene has actually loaded, so a browser
+   without WebGL keeps the flat CSS classroom above.
+   ═════════════════════════════════════════════════════════════════════════════ */
+.cls__scene3d { position: absolute; inset: 0; z-index: 2; }
+.cls__scene3d:empty { display: none; }
+
+/* the flat painted scenery is redundant once there is a real room */
+.cls--3d .cls__room,
+.cls--3d .cls__counter { display: none; }
+.cls--3d .cls__stage::after { z-index: 9; }        /* keep the vignette over the 3D scene */
+
+/* In 3D the board is a CSS3D object: fixed PIXEL size (the renderer converts px → metres
+   via its scale), statically positioned, and stripped of the frame and shadow that the
+   real 3D woodwork now provides. */
+.cls--3d .cls__board {
+  /* CSS3DRenderer forces position:absolute inline and drives placement with matrix3d,
+     so pin the offsets to zero and let the transform do the positioning. */
+  width: 1480px; height: 800px;                    /* authored size; scaled to ~3.7 m wide */
+  top: 0; left: 0; right: auto; bottom: auto;
+  border: 0; border-radius: 0;
+  box-shadow: inset 0 0 120px rgba(0,0,0,.5);      /* only the inner chalk-dust shading */
+  overflow: hidden;
+}
+.cls--3d .cls__board::before,
+.cls--3d .cls__board::after { display: none; }     /* no fake frame / tray / cast shadow */
+/* ── the board surface itself ──
+   A real green board is not a flat fill: it is darker at the edges where the light falls
+   off, faintly streaked from years of wiping, and slightly uneven in tone. */
+.cls--3d .cls__board {
+  background:
+    /* wipe streaks — very faint, at a slight angle, like a cloth passed over it */
+    repeating-linear-gradient(102deg, rgba(255,255,255,.020) 0 3px, transparent 3px 26px),
+    repeating-linear-gradient(96deg, rgba(255,255,255,.014) 0 2px, transparent 2px 41px),
+    /* the chalk-dust haze that never quite comes off, heaviest low and centre */
+    radial-gradient(70% 46% at 46% 76%, rgba(226,255,238,.075), transparent 72%),
+    /* the board's own colour, lit from the window side */
+    radial-gradient(135% 125% at 68% 14%, #35664e 0%, #26543d 44%, #143427 100%);
+}
+
+/* the slide text is being viewed from ~3 m away in the room, so it needs to be larger */
+.cls--3d .cls__slide { padding: 40px 46px; font-size: 1.4rem; }
+
+/* ── chalk typography ──
+   Chalk does not have crisp edges. A soft light bloom around every glyph is what sells it,
+   and it is also what makes light text on a dark board comfortable to read. */
+.cls--3d .cls__board .slide-canvas h2,
+.cls--3d .cls__board .slide-canvas h3,
+.cls--3d .cls__board .slide-title {
+  font-family: "Caveat", "Patrick Hand", "Playfair Display", serif;
+  font-size: 2.9rem; line-height: 1.14; letter-spacing: .008em;
+  color: #f4fff8;
+  text-shadow: 0 0 14px rgba(214,255,232,.34), 0 1px 0 rgba(0,0,0,.28);
+}
+.cls--3d .cls__board .kicker {
+  font-size: 1.06rem; letter-spacing: .13em; text-transform: uppercase;
+  color: #ffe1a6; background: rgba(255,225,166,.10);
+  border: 1px solid rgba(255,225,166,.30); border-radius: 999px;
+  padding: 5px 15px;
+}
+.cls--3d .cls__board .slide-sub,
+.cls--3d .cls__board .expx__pt p,
+.cls--3d .cls__board .diax-cycle__text span,
+.cls--3d .cls__board .diax-compare__body p {
+  color: rgba(238,255,245,.90);
+  text-shadow: 0 0 9px rgba(200,255,224,.20);
+  line-height: 1.58;
+}
+/* numbered points — chalk-circle numerals, the way a teacher actually writes them */
+.cls--3d .cls__board .expx__pt { margin-bottom: 18px; }
+.cls--3d .cls__board .expx__pt .n {
+  background: transparent; color: #ffe1a6;
+  border: 2px solid rgba(255,225,166,.75); border-radius: 50%;
+  width: 2.05em; height: 2.05em; line-height: calc(2.05em - 4px);
+  font-family: "Caveat", "Patrick Hand", cursive; font-size: 1.16em; font-weight: 700;
+  box-shadow: 0 0 12px rgba(255,225,166,.22);
+}
+/* flow nodes drawn as chalk boxes rather than filled UI chips */
+.cls--3d .cls__board .flowx__node {
+  background: rgba(255,255,255,.055);
+  border: 1.5px solid rgba(226,255,238,.42);
+  border-radius: 10px;
+  text-shadow: 0 0 10px rgba(214,255,232,.28);
+}
+.cls--3d .cls__board .flowx__arr { color: #ffe1a6; text-shadow: 0 0 10px rgba(255,225,166,.4); }
+
+/* the foot rail reads as a strip of the board frame, not a web toolbar */
+.cls--3d .cls__boardfoot {
+  font-size: 19px; padding: 14px 26px;
+  background: rgba(0,0,0,.30);
+  border-top: 1px solid rgba(226,255,238,.14);
+  color: rgba(234,255,242,.74);
+}
+.cls--3d .cls__pip { height: 7px; width: 30px; }
+.cls--3d .cls__pip.active { width: 42px; }
+
+/* ── seat picker — where the student sits in the room ── */
+.cls__seats {
+  position: absolute; z-index: 8; left: 14px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cls__seat {
+  padding: 8px 13px; border-radius: 11px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.16); background: rgba(12,10,16,.55);
+  color: #fff; font: 600 12.5px/1 "Plus Jakarta Sans", system-ui, sans-serif;
+  backdrop-filter: blur(8px); transition: background .2s, border-color .2s;
+}
+.cls__seat:hover { background: rgba(255,255,255,.16); }
+.cls__seat.active { background: var(--indigo); border-color: var(--indigo); }
+/* the drag-to-look hint */
+.cls--3d .cls__scene3d canvas { cursor: grab; }
+.cls--3d .cls__scene3d canvas:active { cursor: grabbing; }
+
+@media (max-width: 940px) {
+  .cls__seats { left: 6px; gap: 4px; }
+  .cls__seat { padding: 6px 9px; font-size: 11px; }
+}
+
+/* ── 5. Mobile: keep the stacked layout working with the new desktop values ── */
+@media (max-width: 940px) {
+  .cls__board { top: 3%; left: 3%; right: auto; width: 94%; height: 52%; }
+  .cls__teacher { left: 0; width: 58%; bottom: 1%; height: 45%; }
+  .cls__teacher::after { display: none; }       /* too small to read as a shadow */
+  .cls__counter { display: none; }              /* no room for furniture when stacked */
+  .cls__caption { left: auto; right: 2%; width: 96%; bottom: 8px; font-size: 13.5px; }
+  .cls__caption .txt { -webkit-line-clamp: 2; line-clamp: 2; }
+}

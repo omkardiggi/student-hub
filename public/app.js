@@ -321,6 +321,7 @@ async function renderLesson(lesson) {
     `<button class="rail-pip ${i === 0 ? 'active' : ''}" data-i="${i}">${i + 1}. ${s.type}</button>`).join('');
   $('deckRail').querySelectorAll('.rail-pip').forEach(p => p.onclick = () => changeSlideManually(+p.dataset.i));
   showSlide(0);
+  initTutor3D();
   $('lesson').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -557,58 +558,274 @@ function changeSlideManually(i) {
 $('prevSlide').onclick = () => changeSlideManually(slideIx - 1);
 $('nextSlide').onclick = () => changeSlideManually(slideIx + 1);
 
-/* ---------- tutor narration (Fish Audio / MsEdgeTTS / browser voices, free) ---------- */
-let currentAudio = null;
+/* ---------- Live 3D AI Teacher (Right Panel) ---------- */
+let tutor3DTeacher = null;
+let audioCtx = null, analyser = null, lipBuf = null, freqBuf = null;
+let visemeLoopReq = null;
 
-$('tutorPlay').onclick = () => {
-  if (narrating) {
-    if (narrationPaused) {
-      resumeNarration();
-    } else {
-      pauseNarration();
-    }
-  } else {
-    narrating = true;
-    narrationPaused = false;
-    narrateSlide(slideIx);
+async function initTutor3D() {
+  const host = $('tutorAvatar');
+  if (!host) return;
+  if (tutor3DTeacher) return;
+
+  const loadBadge = $('tutorLoad');
+  try {
+    const mod = await import('./teacher3d.js?v=22');
+    tutor3DTeacher = await mod.createTeacher3D(host, { framing: 'bust' });
+    if (loadBadge) loadBadge.remove();
+    if (tutor3DTeacher.setExpression) tutor3DTeacher.setExpression('smile');
+  } catch (err) {
+    console.warn('[Omkar Tutor] Could not load 3D teacher:', err);
+    if (loadBadge) loadBadge.innerHTML = '<span>3D Teacher ready</span>';
   }
-};
+}
 
-/* ---------- 🎓 Learn with AI Teacher — opens the immersive classroom overlay ---------- */
+function setupAudioVisemes(audioEl) {
+  if (!audioEl) return;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.3;
+      lipBuf = new Uint8Array(analyser.fftSize);
+      freqBuf = new Uint8Array(analyser.frequencyBinCount);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const source = audioCtx.createMediaElementSource(audioEl);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    startVisemeLoop();
+  } catch (e) {
+    startVisemeLoop();
+  }
+}
+
+let vOpen = 0, vRound = 0, vWide = 0;
+function startVisemeLoop() {
+  if (visemeLoopReq) cancelAnimationFrame(visemeLoopReq);
+  function tick() {
+    if (analyser && currentAudio && !currentAudio.paused) {
+      analyser.getByteTimeDomainData(lipBuf);
+      let sum = 0;
+      for (let k = 0; k < lipBuf.length; k++) {
+        const v = (lipBuf[k] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / lipBuf.length);
+      let open = Math.max(0, rms - 0.03) * 5.0;
+      open = Math.min(1, Math.pow(open, 0.85));
+
+      analyser.getByteFrequencyData(freqBuf);
+      const binHz = (audioCtx.sampleRate || 48000) / analyser.fftSize;
+      const bLow = Math.round(300 / binHz), bMid = Math.round(1200 / binHz), bHi = Math.round(3000 / binHz);
+      let eLow = 0, eMidHi = 0;
+      for (let i = bLow; i < bMid && i < freqBuf.length; i++) eLow += freqBuf[i];
+      for (let i = bMid; i < bHi && i < freqBuf.length; i++) eMidHi += freqBuf[i];
+
+      let round = eLow > 0 ? Math.min(1, (eLow / (bMid - bLow)) / 80) : 0;
+      let wide = eMidHi > 0 ? Math.min(1, (eMidHi / (bHi - bMid)) / 60) : 0;
+
+      vOpen += (open - vOpen) * (open > vOpen ? 0.6 : 0.32);
+      vRound += (round - vRound) * 0.24;
+      vWide += (wide - vWide) * 0.24;
+
+      if (tutor3DTeacher) {
+        if (tutor3DTeacher.setViseme) tutor3DTeacher.setViseme({ open: vOpen, round: vRound, wide: vWide });
+        if (tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(true);
+      }
+      visemeLoopReq = requestAnimationFrame(tick);
+    } else {
+      if (tutor3DTeacher) {
+        if (tutor3DTeacher.setViseme) tutor3DTeacher.setViseme({ open: 0, round: 0, wide: 0 });
+        if (tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+      }
+      visemeLoopReq = null;
+    }
+  }
+  tick();
+}
+
+/* ---------- Live 3D AI Teacher Classroom Launcher ---------- */
 let _classroomLoading = null;
 function loadClassroom() {
   if (window.OmkarClassroom) return Promise.resolve();
   if (_classroomLoading) return _classroomLoading;
   _classroomLoading = new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = 'classroom.js';
+    s.src = 'classroom.js?v=23';
     s.onload = () => resolve();
     s.onerror = () => reject(new Error('Could not load the AI Teacher.'));
     document.head.appendChild(s);
   });
   return _classroomLoading;
 }
-const _learnBtn = $('learnWithTeacher');
-if (_learnBtn) _learnBtn.onclick = async () => {
+
+async function openLiveClassroom() {
   if (!currentLesson) return;
-  if (narrating && typeof stopNarration === 'function') stopNarration(); // hand off from the quick-answer tutor
-  const prev = _learnBtn.innerHTML;
-  _learnBtn.disabled = true;
-  _learnBtn.innerHTML = '<span class="emo">🎓</span><span>Entering classroom…</span>';
+  if (narrating && typeof stopNarration === 'function') stopNarration();
   try {
     await loadClassroom();
-    // Notes language = what the slides are written in. Teacher language = what she SPEAKS.
-    // They're independent: English notes with a Kannada-speaking teacher is a valid combo.
     const selectedLang = ($('language') && $('language').value) || currentLesson.language || 'English';
     const picked = ($('teacherLang') && $('teacherLang').value) || selectedLang;
     window.OmkarClassroom.open(currentLesson, picked, selectedLang);
   } catch (e) {
     alert(e.message || 'Could not open the AI Teacher.');
-  } finally {
-    _learnBtn.disabled = false;
-    _learnBtn.innerHTML = prev;
   }
-};
+}
+
+if ($('learnWithTeacher')) $('learnWithTeacher').onclick = openLiveClassroom;
+
+/* ---------- tutor narration & interactive controls ---------- */
+let currentAudio = null;
+
+if ($('tutorStartBtn')) {
+  $('tutorStartBtn').onclick = openLiveClassroom;
+}
+
+if ($('tutorPlay')) {
+  $('tutorPlay').onclick = () => {
+    if (narrating) {
+      if (narrationPaused) {
+        resumeNarration();
+      } else {
+        pauseNarration();
+      }
+    } else {
+      startNarration();
+    }
+  };
+}
+
+/* ---------- 🎙️ Live Voice Doubt: Ask Teacher by Speaking ---------- */
+let isListeningDoubt = false;
+let doubtRecognition = null;
+
+if ($('tutorMicBtn')) {
+  $('tutorMicBtn').onclick = () => {
+    if (isListeningDoubt) {
+      if (doubtRecognition) doubtRecognition.stop();
+      stopDoubtMic();
+    } else {
+      pauseNarration();
+      startListeningForDoubt();
+    }
+  };
+}
+
+function startListeningForDoubt() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = $('tutorMicBtn');
+  const statusEl = $('tutorStatus');
+  const capEl = $('tutorCap');
+
+  if (!SpeechRec) {
+    const userQuestion = prompt("What is your doubt about this topic?");
+    if (userQuestion && userQuestion.trim()) {
+      handleLiveDoubt(userQuestion.trim());
+    }
+    return;
+  }
+
+  try {
+    doubtRecognition = new SpeechRec();
+    doubtRecognition.lang = 'en-US';
+    doubtRecognition.interimResults = false;
+    doubtRecognition.maxAlternatives = 1;
+
+    doubtRecognition.onstart = () => {
+      isListeningDoubt = true;
+      if (micBtn) micBtn.classList.add('recording');
+      if (statusEl) statusEl.textContent = 'Listening to your doubt…';
+      if (capEl) capEl.textContent = '🎙️ Listening to you… speak your doubt clearly.';
+    };
+
+    doubtRecognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript && transcript.trim()) {
+        if (capEl) capEl.textContent = `You asked: "${transcript}"`;
+        handleLiveDoubt(transcript.trim());
+      }
+    };
+
+    doubtRecognition.onerror = (err) => {
+      console.warn('[Doubt Mic] Speech recognition error:', err.error);
+      if (statusEl) statusEl.textContent = 'Speech not recognized. Tap Ask Doubt to try again.';
+      stopDoubtMic();
+    };
+
+    doubtRecognition.onend = () => {
+      stopDoubtMic();
+    };
+
+    doubtRecognition.start();
+  } catch (e) {
+    console.warn('[Doubt Mic] Could not start speech recognition:', e);
+    stopDoubtMic();
+  }
+}
+
+function stopDoubtMic() {
+  isListeningDoubt = false;
+  const micBtn = $('tutorMicBtn');
+  if (micBtn) micBtn.classList.remove('recording');
+}
+
+async function handleLiveDoubt(question) {
+  const statusEl = $('tutorStatus');
+  const capEl = $('tutorCap');
+  if (statusEl) statusEl.textContent = 'Creating explanation slide for your doubt…';
+  if (capEl) capEl.textContent = `Creating slide for: "${question}"…`;
+
+  try {
+    const res = await fetch('/api/doubt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        doubt: `Answer student doubt during lesson "${currentLesson?.title || 'Topic'}": ${question}`,
+        level: 'school',
+        language: currentLesson?.language || 'English'
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const newDeck = data.lesson;
+      if (newDeck && newDeck.slides && newDeck.slides.length) {
+        const newSlide = newDeck.slides[0];
+        newSlide.heading = `Doubt: ${question}`;
+        newSlide.subtitle = `Instant AI Teacher Explanation`;
+        const newNarration = (newDeck.narration && newDeck.narration[0]) || `Great question! ${question}. Here is the detailed explanation.`;
+
+        // Automatically insert new slide into greenboard deck right after active slide
+        const insertIdx = slideIx + 1;
+        currentLesson.slides.splice(insertIdx, 0, newSlide);
+        currentLesson.narration.splice(insertIdx, 0, newNarration);
+
+        // Re-render greenboard rail
+        if ($('deckRail')) {
+          $('deckRail').innerHTML = (currentLesson.slides || []).map((s, i) =>
+            `<button class="rail-pip ${i === insertIdx ? 'active' : ''}" data-i="${i}">${i + 1}. ${s.type}</button>`).join('');
+          $('deckRail').querySelectorAll('.rail-pip').forEach(p => p.onclick = () => changeSlideManually(+p.dataset.i));
+        }
+
+        // Automatically jump to new slide on greenboard & have 3D teacher explain it!
+        showSlide(insertIdx);
+        narrationIndex = insertIdx;
+        narrating = true;
+        narrationPaused = false;
+        if (tutor3DTeacher) {
+          if (tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(true);
+          if (tutor3DTeacher.gesture) tutor3DTeacher.gesture('point');
+        }
+        narrateSlide(insertIdx);
+      }
+    }
+  } catch (err) {
+    console.error('[Live Doubt] Failed to build doubt slide:', err);
+    if (statusEl) statusEl.textContent = 'Could not generate slide for doubt.';
+  }
+}
 
 function pickVoice(code) {
   const vs = speechSynthesis.getVoices();
@@ -621,18 +838,22 @@ function speakBrowser(text, code, callback) {
   u.lang = code;
   const v = pickVoice(code);
   if (v) u.voice = v;
-  u.onend = callback;
-  u.onerror = callback;
+  u.onend = () => {
+    if (tutor3DTeacher && tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+    callback();
+  };
+  u.onerror = () => {
+    if (tutor3DTeacher && tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+    callback();
+  };
+  if (tutor3DTeacher && tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(true);
   speechSynthesis.speak(u);
 }
 
-// language label -> BCP-47 code for the browser-voice fallback
 function codeFor(label) {
-  return LANG_CODE[label] || LANG_CODE[$('language').value] || 'en-US';
+  return LANG_CODE[label] || LANG_CODE[($('language') && $('language').value) || 'English'] || 'en-US';
 }
 
-// Speak ONE line in a specific language: try backend neural TTS (Cartesia, which
-// honours the language code), and fall back to the browser voice. done() fires when finished.
 async function speakLine(text, langLabel, done) {
   if (!narrating || narrationPaused) return;
   const code = codeFor(langLabel);
@@ -648,10 +869,19 @@ async function speakLine(text, langLabel, done) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         currentAudio = new Audio(url);
-        currentAudio.onended = () => { URL.revokeObjectURL(url); done(); };
-        currentAudio.onerror = () => { URL.revokeObjectURL(url); done(); };
+        currentAudio.onended = () => {
+          URL.revokeObjectURL(url);
+          if (tutor3DTeacher && tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+          done();
+        };
+        currentAudio.onerror = () => {
+          URL.revokeObjectURL(url);
+          if (tutor3DTeacher && tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+          done();
+        };
         if (!narrationPaused && narrating) {
           try {
+            setupAudioVisemes(currentAudio);
             await currentAudio.play();
             return;
           } catch (pErr) {
@@ -673,11 +903,18 @@ function narrateSlide(index) {
   }
   narrationIndex = index;
   showSlide(index);
-  $('tutorCap').textContent = lines[index];
-  
-  $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  if ($('tutorCap')) $('tutorCap').textContent = lines[index];
+  if ($('tutorStatus')) $('tutorStatus').textContent = `Slide ${index + 1} of ${lines.length}`;
 
-  const lessonLang = currentLesson.language || $('language').value;
+  if (tutor3DTeacher) {
+    if (tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(true);
+    if (tutor3DTeacher.gesture) tutor3DTeacher.gesture('auto');
+  }
+  
+  if ($('tutorPlay')) $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  if ($('tutorStartBtn')) $('tutorStartBtn').innerHTML = '<span>⏸ Pause Teaching</span>';
+
+  const lessonLang = currentLesson.language || ($('language') && $('language').value) || 'English';
   speakLine(lines[index], lessonLang, () => {
     if (narrating && !narrationPaused) {
       narrateSlide(index + 1);
@@ -699,17 +936,23 @@ function pauseNarration() {
   if (speechSynthesis.speaking) {
     speechSynthesis.pause();
   }
-  $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>';
-  $('tutorCap').textContent = 'Paused — press play to resume.';
+  if (tutor3DTeacher) {
+    if (tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+  }
+  if ($('tutorPlay')) $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>';
+  if ($('tutorStartBtn')) $('tutorStartBtn').innerHTML = '<span>🎓 Ready to Teach — Resume Class</span>';
+  if ($('tutorCap')) $('tutorCap').textContent = 'Paused — click play to resume.';
 }
 
 function resumeNarration() {
   narrationPaused = false;
-  $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  if ($('tutorPlay')) $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  if ($('tutorStartBtn')) $('tutorStartBtn').innerHTML = '<span>⏸ Pause Teaching</span>';
+  if (tutor3DTeacher && tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(true);
   
   if (currentAudio) {
     currentAudio.play().catch(() => {
-      const lessonLang = currentLesson.language || $('language').value;
+      const lessonLang = currentLesson.language || ($('language') && $('language').value) || 'English';
       const lines = currentLesson.narration;
       speakBrowser(lines[narrationIndex], codeFor(lessonLang), () => {
         if (narrating && !narrationPaused) {
@@ -732,8 +975,12 @@ function stopNarration() {
     currentAudio.pause();
     currentAudio = null;
   }
-  $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>';
-  $('tutorCap').textContent = 'Paused — press play to continue.';
+  if (tutor3DTeacher) {
+    if (tutor3DTeacher.setSpeaking) tutor3DTeacher.setSpeaking(false);
+  }
+  if ($('tutorPlay')) $('tutorPlay').innerHTML = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>';
+  if ($('tutorStartBtn')) $('tutorStartBtn').innerHTML = '<span>🎓 Ready to Teach — Start Class</span>';
+  if ($('tutorCap')) $('tutorCap').textContent = 'Lesson complete — tap Ready to Teach to replay.';
 }
 
 /* ---------- download deck (locally built: designs + flowcharts + diagrams + images) ---------- */

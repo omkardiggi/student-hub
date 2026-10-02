@@ -346,7 +346,9 @@ app.use('/avatar', express.static(join(__dirname, 'avatar'), { maxAge: '7d', imm
 app.use(express.static(join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`\n  Omkar Hub running →  http://localhost:${PORT}\n`));
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => console.log(`\n  Omkar Hub running →  http://localhost:${PORT}\n`));
+}
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
