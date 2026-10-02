@@ -27,7 +27,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 
 
 app.use(express.json({ limit: '15mb' })); // big enough for base64 photos
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
+  secret: process.env.SESSION_SECRET || 'some-long-random-string-for-student-hub-session-secret',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 },
